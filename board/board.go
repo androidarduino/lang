@@ -2,6 +2,7 @@ package board
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 )
 
@@ -39,11 +40,12 @@ func (b *Board) New(id int, roles []string, meta map[string]string) Board {
 	b.State = "setup"
 	//TODO 处理盗贼的牌，数量-2
 	b.SeatsCount = len(roles)
+	b.meta = meta
 	fmt.Printf("New board created: %v\n", b)
 	b.AddRoles(roles)
 	b.SM = map[string][]string {
-		"setup": {"房主", "生成房间并洗牌，如有盗贼生成盗贼选择，请大家入座查看身份", "allSeated","begin"},
-		"begin": {"房主", "所有玩家已经入座完毕并查看了身份，请点击确认开始游戏", "done","10"},
+		"setup": {"所有人", "生成房间并洗牌，如有盗贼生成盗贼选择，请大家入座查看身份", "allSeated","begin"},
+		"begin": {"所有人", "所有玩家已经入座完毕并查看了身份，请点击确认开始游戏", "done","10"},
 		"10": {"混血儿", "混血儿请睁眼，选择一个号码作为爸爸","done","20"},
 		"20": {"野孩子", "野孩子请睁眼，请选择一个号码作为榜样，榜样死亡你将变成狼人", "done","25"},
 		"25": {"迷妹", "迷妹请睁眼，请选择你的偶像", "done","30"},
@@ -72,7 +74,7 @@ func (b *Board) New(id int, roles []string, meta map[string]string) Board {
 		"210": {"通灵师", "通灵师请睁眼，请选择一个玩家查验他的具体身份", "done","220"},
 		"220": {"狐狸", "狐狸请睁眼，请选择一位玩家查验他和他身边两位活着的玩家有没有狼人", "done","225"},
 		"225": {"企鹅", "企鹅请睁眼，请选择一位玩家冷冻他的技能", "done","230"},
-		"230": {"乌鸦", "乌鸦请睁眼，请选择是否要诽谤一位玩家。受到诽谤后投票放逐时此玩家会多出一票", "done","240"},
+		"230": {"乌鸦", "乌鸦请睁眼，请选择是否要诽谤一位玩家。受到诽谤后投票放逐时此玩家会多出一票", "done","250"},
 		"250": {"禁言长老", "禁言长老请睁眼，请选择是否要禁止一位玩家明天的发言", "done","270"},
 		"270": {"名媛", "名媛请睁眼，请选择要与哪位玩家共渡春宵。此玩家今晚中刀中毒不会死亡，但你若死亡他也将殉葬。若连睡两晚，对方将死亡。", "done","280"},
 		"280": {"迷妹", "迷妹请睁眼，是否要对你的偶像使用粉或黑的技能，粉可以减少一票，黑可以增加一票", "done","290"},
@@ -86,6 +88,8 @@ func (b *Board) New(id int, roles []string, meta map[string]string) Board {
 func (b* Board) inOperatorGroup(seatNumber int) bool {
 	player := b.Player(seatNumber)
 	role := b.SM[b.State][0]
+	log.Println(fmt.Sprintf("正在检查：%v 是否属于 %s 团队，结果%b。", player, role, player.HasLabel(role)))
+
 	return player.HasLabel(role)
 }
 
@@ -108,7 +112,7 @@ func (board* Board) TakeAction(seatNumber string, action string, n1 string, n2 s
 	}
 */
 	//检查是否有权限做这个事情，发起action的人身份必须与当前轮次操作人身份相符
-	if (board.inOperatorGroup(seat)) {
+	if (!board.inOperatorGroup(seat)) {
 		return "没有操作权限"
 	}
 	board.ActivePlayer = board.Player(seat)
@@ -128,7 +132,7 @@ func (board* Board) TakeAction(seatNumber string, action string, n1 string, n2 s
 			message = board.lastNightResult()
 		case "不操作":
 			message = board.skip()
-		case "确认":
+		case "猎人状态":
 			message = board.confirm()
 		case "女巫查看":
 			message = board.witchResult()
@@ -143,7 +147,7 @@ func (board* Board) TakeAction(seatNumber string, action string, n1 string, n2 s
 		case "女巫毒":
 			message = board.poison(num1)
 		case "女巫救":
-			message = board.heal(num1)
+			message = board.heal()
 		case "预言家验":
 			message = board.examine(num1)
 		case "狼美人连":
@@ -208,6 +212,7 @@ func (b *Board) AddRoles(roles []string) {
 		player := new(Player)
 		player.New(role)
 		b.Seats[i+1] = player
+		player.Seat = i+1
 	}
 }
 
@@ -255,7 +260,9 @@ func (b *Board) nextStep() {
 	//TODO： websocket.send("房主", "所有人请闭眼   ")
 	//跳过所有不存在的角色
 	s := b.State
-	for !b.hasRole(b.SM[b.State][0]) && b.State!="end" {
+	nextState := b.SM[b.State][3]
+	b.State = nextState
+	for !b.hasRole(b.SM[b.State][0]) && b.State!="election" {
 		nextState := b.SM[b.State][3]
 		b.State = nextState
 	}
@@ -300,7 +307,13 @@ func (b *Board) startGame() string {
 }
 func (b *Board) ViewCard(prefferedSeat int, nickName string) string {
 	//调用TakeSeat
+	if prefferedSeat < 1 || prefferedSeat > len(b.Seats) {
+		prefferedSeat = 1
+	}
 	seat, total_seats, taken_seats := b.TakeSeat(prefferedSeat, nickName)
+	if (total_seats == taken_seats) {
+		return fmt.Sprintf("%d\n%s\n%d\n%d", 0, "房间已满", total_seats, taken_seats)
+	}
 	role := b.Seats[seat].Role
 	b.Log(fmt.Sprintf("玩家 %s 占据了%d号座位，他的身份是%s, %d个座位中已经有%d个座位有人。",nickName, seat, role, total_seats, taken_seats))
 	return fmt.Sprintf("%d\n%s\n%d\n%d", seat, role, total_seats, taken_seats)
@@ -358,15 +371,16 @@ func (b *Board) checkLucky() string {
 }
 //用于女巫查看昨夜杀人信息
 func (b *Board) witchResult() string {
-	heal, ok, _ := b.checkSkill("女巫救")
-	if (!ok || heal < 1) {
-		return "您没有解药，请不要乱点。"
+	player := b.ActivePlayer
+	n, ok := player.Skills["女巫救"]
+	if (!ok || n < 1) {
+		return "您没有解药，看不到刀人结果。"
 	} else {
-		l, ok := b.meta["昨晚中刀"]
+		last, ok := b.meta["昨晚中刀"]
 		if (!ok) {
 			return "昨晚狼人空刀。"
 		}
-		return fmt.Sprintf("昨晚%s号玩家被刀，如果要救请选择菜单中的’女巫救‘。", l)
+		return fmt.Sprintf("昨晚%s号玩家被刀，如果要救请选择菜单中的 女巫救 。", last)
 	}
 	//不需要修改状态机，只有女巫选择救或毒时才修改状态机
 }
@@ -376,11 +390,11 @@ func (b *Board) slaughter(num1 int) string {
 	if (target.HasLabel("恶魔")||target.HasLabel("狼枪")||target.HasLabel("狼美人")) {
 		return fmt.Sprintf("%d号玩家是不可以自刀的角色，请重新选择。", target.Seat)
 	}
-	b.meta["昨晚中刀"] = string(num1)
 	n, ok := player.Skills["狼人刀"]
 	if (!ok || n < 1) {
 		return "您没有刀，或者没有刀人的技能。"
 	} else {
+		b.meta["昨晚中刀"] = strconv.Itoa(target.Seat)
 		target.Label("被刀")
 		b.Log(fmt.Sprintf("%d号狼人刀了%d号玩家", player.Seat, target.Seat))
 		b.nextStep()
@@ -393,7 +407,7 @@ func (b *Board) poison(num1 int) string {
 	if (target.HasLabel("恶魔")) {
 		return "操作成功。"
 	}
-	b.meta["昨晚被毒"] = string(num1)
+	b.meta["昨晚被毒"] = strconv.Itoa(num1)
 	n, ok := player.Skills["女巫毒"]
 	if (!ok || n < 1) {
 		return "操作失败，您没有毒药。"
@@ -404,15 +418,20 @@ func (b *Board) poison(num1 int) string {
 	}
 	return "操作成功。"
 }
-func (b *Board) heal(num1 int) string {
+func (b *Board) heal() string {
 	player := b.ActivePlayer
-	target := b.Seats[num1]
+	nu, ok := b.meta["昨晚中刀"]
+	if (!ok) {
+		return "操作错误，昨晚没有玩家没有死亡。"
+	}
+	ns, _ := strconv.Atoi(nu)
+	target := b.Seats[ns]
 	if (target.HasLabel("女巫") && b.meta["女巫自救"] == "不能") {
 		return "操作失败，女巫不可能自救。"
 	}
-	b.meta["昨晚被救"] = string(num1)
+	b.meta["昨晚被救"] = strconv.Itoa(ns)
 	n, ok := player.Skills["女巫救"]
-	if (!ok || n< 1) {
+	if (!ok || n<1) {
 		return "操作失败，您没有解药。"
 	} else {
 		target.Label("被救")
@@ -424,7 +443,7 @@ func (b *Board) heal(num1 int) string {
 func (b *Board) examine(num1 int) string {
 	player := b.ActivePlayer
 	target := b.Seats[num1]
-	b.meta["昨晚被验"] = string(num1)
+	b.meta["昨晚被验"] = strconv.Itoa(num1)
 	_, ok := player.Skills["预言家验"]
 	if (!ok) {
 		return "操作失败，您没有验人功能。"
@@ -448,10 +467,10 @@ func (b *Board) charm(num1 int) string {
 	if !ok {
 		l = "-1"
 	}
-	if (string(num1) == l || num1 == player.Seat) {
+	if (strconv.Itoa(num1) == l || num1 == player.Seat) {
 		return "操作失败，不可以连续两晚连同一个人，也不可以连自己。"
 	}
-	b.meta["昨晚被连"] = string(num1)
+	b.meta["昨晚被连"] = strconv.Itoa(num1)
 	n, ok := player.Skills["狼美人连"]
 	if (!ok || n<1) {
 		return "操作失败，您没有连人的能力。"
@@ -492,10 +511,10 @@ func (b *Board) guard(num1 int) string {
 	if !ok {
 		l = "-1"
 	}
-	if (string(num1) == l) {
+	if (strconv.Itoa(num1) == l) {
 		return "操作失败，不可以连续两晚守同一个人"
 	}
-	b.meta["昨晚被守"] = string(num1)
+	b.meta["昨晚被守"] = strconv.Itoa(num1)
 	n, ok := player.Skills["守卫守"]
 	if (!ok || n<1) {
 		return "操作失败，您没有守人的能力。"
@@ -588,10 +607,10 @@ func (b *Board) freeze(num1 int) string {
 	player := b.ActivePlayer
 	target := b.Seats[num1]
 	f, ok := b.meta["昨晚被冻"]
-	if (ok && f == string(num1)) {
+	if (ok && f == strconv.Itoa(num1)) {
 		return "操作失败，不能连续两晚冻同一个人。"
 	}
-	b.meta["昨晚被冻"] = string(num1)
+	b.meta["昨晚被冻"] = strconv.Itoa(num1)
 	n, ok := player.Skills["企鹅冻"]
 	if (!ok || n<1) {
 		return "操作失败，您没有冻人功能。"
@@ -606,7 +625,7 @@ func (b *Board) freeze(num1 int) string {
 func (b *Board) defamation(num1 int) string {
 	player := b.ActivePlayer
 	target := b.Seats[num1]
-	b.meta["昨晚被诽谤"] = string(num1)
+	b.meta["昨晚被诽谤"] = strconv.Itoa(num1)
 	n, ok := player.Skills["乌鸦诽谤"]
 	if (!ok || n<1) {
 		return "操作失败，您没有诽谤人功能。"
@@ -643,13 +662,13 @@ func (b *Board) sleep(num1 int) string {
 	if num1 == player.Seat {
 		return "操作失败，不可以睡自己。"
 	}
-	if (string(num1) == l) {
+	if (strconv.Itoa(num1) == l) {
 		b.Log(fmt.Sprintf("%d号名媛连续两晚睡了%d号玩家致使其死亡。", player.Seat, num1))
 		target.Skills["寿命"] = 0
 		b.Report(fmt.Sprintf("昨夜%d死亡。", target.Seat))
 		return fmt.Sprintf("%d号玩家因为连续两晚与你共度良宵精尽人亡。", num1)
 	}
-	b.meta["昨晚被睡"] = string(num1)
+	b.meta["昨晚被睡"] = strconv.Itoa(num1)
 	n, ok := player.Skills["名媛睡"]
 	if (!ok || n<1) {
 		return "操作失败，您没有睡人的能力。"
@@ -733,10 +752,10 @@ func (b *Board) guardPoison(num1 int) string {
 	if !ok {
 		l = "-1"
 	}
-	if (string(num1) == l) {
+	if (strconv.Itoa(num1) == l) {
 		return "操作失败，不可以连续两晚守毒同一个人"
 	}
-	b.meta["昨晚被守毒"] = string(num1)
+	b.meta["昨晚被守毒"] = strconv.Itoa(num1)
 	n, ok := player.Skills["机械狼守毒"]
 	if (!ok || n<1) {
 		return "操作失败，您没有守毒的能力。"
@@ -783,7 +802,7 @@ func (b *Board) mix(num1 int) string {
 		return "操作失败，您没有混血儿混人的能力。"
 	} else {
 		b.Log(fmt.Sprintf("%d号混血儿混了%d号玩家", player.Seat, target.Seat))
-		b.meta["混血儿混"] = string(num1)
+		b.meta["混血儿混"] = strconv.Itoa(num1)
 		b.nextStep()
 	}
 	return "操作成功。"
@@ -796,7 +815,7 @@ func (b *Board) father(num1 int) string {
 		return "操作失败，您没有野孩子认爹的能力。"
 	} else {
 		b.Log(fmt.Sprintf("%d号野孩子认了%d号玩家作为爸爸", player.Seat, target.Seat))
-		b.meta["野孩子认"] = string(num1)
+		b.meta["野孩子认"] = strconv.Itoa(num1)
 		b.nextStep()
 	}
 	return "操作成功。"	
@@ -809,7 +828,7 @@ func (b *Board) fan(num1 int) string {
 		return fmt.Sprintf("操作失败，您已经认定了%d号玩家作为偶像。", idol)
 	} else {
 		b.Log(fmt.Sprintf("%d号迷妹成为了%d号玩家的头号粉丝", player.Seat, target.Seat))
-		b.meta["迷妹迷"] = string(num1)
+		b.meta["迷妹迷"] = strconv.Itoa(num1)
 		b.nextStep()
 	}
 	return "操作成功。"

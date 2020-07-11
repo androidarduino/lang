@@ -114,16 +114,16 @@ window.onload = function () {
 	<input type=button value="入座" onclick = "sitDown(true)">
 	<input type=button value="返回座位" onclick = "sitDown(false)">
 </div>
-<form id="operation" method="GET" action="action.html" style="display:none">
+<form id="operation" method="GET" action="http://localhost/operate" style="display:none">
 	<p id = "userInfo">
 
 	</p>
 	<p>
 	<div>
-	<input type=hidden id="boardNumber" name="房间号" value="">
-	<input type=hidden id="userNumber" value="" name="座号">
-	<input type=hidden id="nickName" value="" name="昵称">		
-	<select name="操作" id="操作" onchange="setGrps()">
+	<input type=hidden id="boardNumber" name="board" value="">
+	<input type=hidden id="userNumber" value="" name="number">
+	<input type=hidden id="nickName" value="" name="nick">		
+	<select name="action" id="操作" onchange="setGrps()">
 	<option value="房主开局">房主开局</option>
 	<option value="房主查看昨夜信息">房主查看昨夜信息</option>
 	<option value="房主关闭">房主关闭</option>		
@@ -164,7 +164,7 @@ window.onload = function () {
 	</select>
 	</div>
 	<div id="g1" style="display:none">
-	<select name="号码" id="号码">
+	<select name="num1" id="号码">
 	<option value="0">空号码</option>
 	<option value="1">1</option>
 	<option value="2">2</option>
@@ -188,7 +188,7 @@ window.onload = function () {
 	<option value="20">20</option>
 	</select>号玩家</div>
 	<div id="g2" style="display:none">和
-	<select name="和号码" id="和号码">
+	<select name="num2" id="和号码">
 	<option value="0">空号码</option>
 	<option value="1">1</option>
 	<option value="2">2</option>
@@ -212,7 +212,7 @@ window.onload = function () {
 	<option value="20">20</option>
 	</select>号玩家</div>
 	<div id="g3" style="display:none">还有
-	<select name="还有号码" id="还有号码">
+	<select name="num3" id="还有号码">
 	<option value="0">空号码</option>
 	<option value="1">1</option>
 	<option value="2">2</option>
@@ -236,14 +236,14 @@ window.onload = function () {
 	<option value="20">20</option>
 	</select>号玩家</div>
 	<div id="g4" style="display:none">以下技能:
-	<select name="技能" id="技能">
+	<select name="skill" id="技能">
 	<option value="">无技能</option>
 	<option value="镜子">镜子</option>
 	<option value="毒药">毒药</option>
 	<option value="猎枪">猎枪</option>
 	</select></div>
 	<div id="g5" style="display:none">第几张牌：
-	<select name="牌" id="牌">
+	<select name="card" id="牌">
 	<option value="0">不选</option>
 	<option value="1">1</option>
 	<option value="2">2</option>

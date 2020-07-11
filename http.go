@@ -21,13 +21,15 @@ func checkIn(w http.ResponseWriter, req *http.Request) {
 	//把输入值变成数组，创建一个局，把每一个元素加入其中
 	board := new(board.Board)
 	boardId = boardId + 1
+	board.Id = boardId
+	boards[boardId] = board
 	//TODO：转换输入数据为json对象，从中取出roles数组
 	//roles := parseRoles(roleJson)
 	//TODO: 从输入里获取本局配置
 	meta := map[string]string {"女巫自救": "不能"}
 	roles := []string {"预言家","女巫","猎人","白痴","村民","村民","村民","村民","狼人","狼人","狼人","狼人",}
 	board.New(boardId, roles, meta)
-	message := fmt.Sprintf("开房成功！ 房间号为%n，可以邀请你的好友到 abc.com/%n 开始游戏\n", board.Id, board.Id)
+	message := fmt.Sprintf("开房成功！ 房间号为%d，可以邀请你的好友到 abc.com/%d 开始游戏\n", board.Id, board.Id)
 	fmt.Fprintf(w, message)
 }
 
@@ -48,11 +50,15 @@ func operate(w http.ResponseWriter, req *http.Request) {
 
 	boardId, _ = strconv.Atoi(n)
 	board := boards[boardId]
+	oldState := board.State
+	log.Println(fmt.Sprintf("Calling TakeAction with parameters board: %s seat number %s action %s num1 %s num2 %s num3 %s skill %s card %s", n, number, action, num1, num2, num3, skill, card))
 	fmt.Fprintf(w, board.TakeAction(number, action, num1, num2, num3, skill, card))
-	// Send instruction to the board's host
-	instruction := board.SM[board.State][1]
-	msg := &Message{BoardId: board.Id, Body: instruction}
-	hub.host <- msg
+	// If state changes, send instruction to the board's host
+	if oldState != board.State {
+		instruction := board.SM[board.State][1]
+		msg := &Message{BoardId: board.Id, Body: instruction}
+		hub.host <- msg
+	}
 }
 
 var boards map[int]*board.Board
