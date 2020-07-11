@@ -1,0 +1,256 @@
+<script type="text/javascript">
+window.onload = function () {
+    var conn;
+
+	function send(msg) {
+        if (!conn) {
+            return false;
+        }
+        if (!msg) {
+            return false;
+        }
+        conn.send(msg);
+        return false;
+    };
+
+    function connectToWebSocket(url) {
+        conn = new WebSocket(url);
+        conn.onclose = function (evt) {
+            alert("connection closed " + evt)
+        };
+        conn.onmessage = function (evt) {
+        	//TODO: play voice according to message
+            alert("received message: " + evt)
+        };
+    }
+};
+</script>
+<script language ="javascript">
+	var omap = {
+		//五个分别是：号码，号码，号码，技能，牌
+		"房主开局": [0,0,0,0,0],
+		"房主查看昨夜信息": [0,0,0,0,0],
+		"房主关闭": [0,0,0,0,0],
+		"房主重新发牌": [0,0,0,0,0],
+		"全体查看结果": [0,0,0,0,0],
+		"不操作": [0,0,0,0,0],
+		"确认": [0,0,0,0,0],
+		"讨论完毕": [0,0,0,0,0],
+		"狼人杀": [1,0,0,0,0],
+		"女巫毒": [1,0,0,0,0],
+		"女巫救": [1,0,0,0,0],
+		"预言家验": [1,0,0,0,0],
+		"狼美人连": [1,0,0,0,0],
+		"丘比特连": [1,1,0,0,0],
+		"守卫守": [1,0,0,0,0],
+		"黑商给": [1,0,0,1,0],
+		"幸运儿验": [1,0,0,0,0],
+		"幸运儿毒": [1,0,0,0,0],
+		"狐狸验": [1,0,0,0,0],
+		"企鹅冻": [1,0,0,0,0],
+		"乌鸦诽谤": [1,0,0,0,0],
+		"盗贼选": [0,0,0,0,1],
+		"魔术师交换": [1,1,0,0,0],
+		"名媛睡": [1,0,0,0,0],
+		"潜行者暗杀": [1,0,0,0,0],
+		"禁言长老禁言": [1,0,0,0,0],
+		"通灵师验": [1,0,0,0,0],
+		"机械狼学": [1,0,0,0,0],
+		"机械狼验": [1,0,0,0,0],
+		"机械狼毒": [1,0,0,0,0],
+		"机械狼守": [1,0,0,0,0],
+		"种狼感染": [1,0,0,0,0],
+		"混血儿混": [1,0,0,0,0],
+		"野孩子混": [1,0,0,0,0],
+		"迷妹迷": [1,0,0,0,0],
+		"迷妹粉": [0,0,0,0,0],
+		"迷妹黑": [0,0,0,0,0],
+		"恶魔验": [1,0,0,0,0],		
+	};
+	function setGrps() {
+		var ops = document.getElementById("操作");
+		var mtx = omap[ops.value];
+		document.getElementById("g1").style.display = (mtx[0]==1)?"block":"none";
+		document.getElementById("g2").style.display = (mtx[1]==1)?"block":"none";
+		document.getElementById("g3").style.display = (mtx[2]==1)?"block":"none";
+		document.getElementById("g4").style.display = (mtx[3]==1)?"block":"none";
+		document.getElementById("g5").style.display = (mtx[4]==1)?"block":"none";
+	}
+	function sitDown(showRole) {
+		var num = document.getElementById("num").value;
+		var nickName = document.getElementById("nick").value;
+		var board = document.getElementById("board").value;
+		if (showRole) {
+			/*TODO: send ajax request to show popup role message, providing board, num, nick
+			The message consists of the following lines:
+			seat number
+			role name
+			total seats
+			taken seats
+			wsUrl
+			*/
+
+		}
+		//TODO: remove fake values after testing
+		var seat_number = num;
+		var role_name = "预言家";
+		var total_seats = 12;
+		var taken_seats = 5;
+		var wsUrl = "ws://localhost/ws";
+		document.getElementById("userInfo").inneqrHTML= "<h1>" + num + "号玩家 " + nickName + "</h1> 房间号：" + board;
+		document.getElementById("operation").style.display = "block";
+		document.getElementById("checkRole").style.display = "none";
+		document.getElementById("boardNumber").value = board;
+		document.getElementById("nickName").value = nickName;
+		document.getElementById("userNumber").value = num;
+		connectToWebSocket(wsUrl+"?id="+seat_number)
+	}
+</script>
+<div id="checkRole" style="display:block">
+	<h2>请输入房间号，想要的座位号码和昵称后，点击"入座"</h2>
+	房间号：<input id="board" type=number value=0><br>
+	首选座号：<input id="num" type=number min=0 max=20 value=0><br>
+	昵称：<input id="nick" type=text size=20 value="玩家"><br>
+	<input type=button value="入座" onclick = "sitDown(true)">
+	<input type=button value="返回座位" onclick = "sitDown(false)">
+</div>
+<form id="operation" method="GET" action="action.html" style="display:none">
+	<p id = "userInfo">
+
+	</p>
+	<p>
+	<div>
+	<input type=hidden id="boardNumber" name="房间号" value="">
+	<input type=hidden id="userNumber" value="" name="座号">
+	<input type=hidden id="nickName" value="" name="昵称">		
+	<select name="操作" id="操作" onchange="setGrps()">
+	<option value="房主开局">房主开局</option>
+	<option value="房主查看昨夜信息">房主查看昨夜信息</option>
+	<option value="房主关闭">房主关闭</option>		
+	<option value="房主重新发牌">房主重新发牌</option>
+	<option value="全体查看结果">全体查看结果</option>
+	<option value="确认">确认</option>
+	<option value="讨论完毕">讨论完毕</option>
+	<option value="狼人杀">狼人杀</option>
+	<option value="女巫毒">女巫毒</option>
+	<option value="女巫救">女巫救</option>
+	<option value="预言家验">预言家验</option>
+	<option value="狼美人连">狼美人连</option>
+	<option value="丘比特连">丘比特连</option>
+	<option value="守卫守">守卫守</option>
+	<option value="黑商给">黑商给</option>
+	<option value="幸运儿验">幸运儿验</option>
+	<option value="幸运儿毒">幸运儿毒</option>
+	<option value="狐狸验">狐狸验</option>
+	<option value="企鹅冻">企鹅冻</option>
+	<option value="乌鸦诽谤">乌鸦诽谤</option>
+	<option value="盗贼选">盗贼选</option>
+	<option value="魔术师交换">魔术师交换</option>
+	<option value="名媛睡">名媛睡</option>
+	<option value="潜行者暗杀">潜行者暗杀</option>
+	<option value="禁言长老禁言">禁言长老禁言</option>
+	<option value="通灵师验">通灵师验</option>
+	<option value="机械狼学">机械狼学</option>
+	<option value="机械狼验">机械狼验</option>
+	<option value="机械狼毒">机械狼毒</option>
+	<option value="机械狼守">机械狼守</option>
+	<option value="种狼感染">种狼感染</option>
+	<option value="混血儿混">混血儿混</option>
+	<option value="野孩子混">野孩子混</option>
+	<option value="迷妹迷">迷妹迷</option>
+	<option value="迷妹粉">迷妹粉</option>
+	<option value="迷妹黑">迷妹黑</option>
+	<option value="恶魔验">恶魔验</option>
+	</select>
+	</div>
+	<div id="g1" style="display:none">
+	<select name="号码" id="号码">
+	<option value="0">空号码</option>
+	<option value="1">1</option>
+	<option value="2">2</option>
+	<option value="3">3</option>
+	<option value="4">4</option>
+	<option value="5">5</option>
+	<option value="6">6</option>
+	<option value="7">7</option>
+	<option value="8">8</option>
+	<option value="9">9</option>
+	<option value="10">10</option>
+	<option value="11">11</option>
+	<option value="12">12</option>
+	<option value="13">13</option>
+	<option value="14">14</option>
+	<option value="15">15</option>
+	<option value="16">16</option>
+	<option value="17">17</option>
+	<option value="18">18</option>
+	<option value="19">19</option>
+	<option value="20">20</option>
+	</select>号玩家</div>
+	<div id="g2" style="display:none">和
+	<select name="和号码" id="和号码">
+	<option value="0">空号码</option>
+	<option value="1">1</option>
+	<option value="2">2</option>
+	<option value="3">3</option>
+	<option value="4">4</option>
+	<option value="5">5</option>
+	<option value="6">6</option>
+	<option value="7">7</option>
+	<option value="8">8</option>
+	<option value="9">9</option>
+	<option value="10">10</option>
+	<option value="11">11</option>
+	<option value="12">12</option>
+	<option value="13">13</option>
+	<option value="14">14</option>
+	<option value="15">15</option>
+	<option value="16">16</option>
+	<option value="17">17</option>
+	<option value="18">18</option>
+	<option value="19">19</option>
+	<option value="20">20</option>
+	</select>号玩家</div>
+	<div id="g3" style="display:none">还有
+	<select name="还有号码" id="还有号码">
+	<option value="0">空号码</option>
+	<option value="1">1</option>
+	<option value="2">2</option>
+	<option value="3">3</option>
+	<option value="4">4</option>
+	<option value="5">5</option>
+	<option value="6">6</option>
+	<option value="7">7</option>
+	<option value="8">8</option>
+	<option value="9">9</option>
+	<option value="10">10</option>
+	<option value="11">11</option>
+	<option value="12">12</option>
+	<option value="13">13</option>
+	<option value="14">14</option>
+	<option value="15">15</option>
+	<option value="16">16</option>
+	<option value="17">17</option>
+	<option value="18">18</option>
+	<option value="19">19</option>
+	<option value="20">20</option>
+	</select>号玩家</div>
+	<div id="g4" style="display:none">以下技能:
+	<select name="技能" id="技能">
+	<option value="">无技能</option>
+	<option value="镜子">镜子</option>
+	<option value="毒药">毒药</option>
+	<option value="猎枪">猎枪</option>
+	</select></div>
+	<div id="g5" style="display:none">第几张牌：
+	<select name="牌" id="牌">
+	<option value="0">不选</option>
+	<option value="1">1</option>
+	<option value="2">2</option>
+	<option value="3">3</option>
+	<option value="4">4</option>
+	</select>
+	</div>
+	</p>
+<input type=submit value="Go">
+</form>

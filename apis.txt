@@ -1,0 +1,16 @@
+API calls
+
+// sit down in a room numbered board, preffered seat number number, with nick name nick
+string sitDown(board, number, nick); // returns: "为您选择了3号座位，目前12人中已有7人入座。您的身份是：<b>狼人<b>"
+
+// perform operation in room board, actor id number, action action, on num1, num2, num3, skill, card
+string operate(board, number, action, num1, num2, num3, skill, card); // returns: "操作成功，请点击确定并闭眼"， "您验到的3号玩家是神", "您已经成功交换了4号和8号玩家", "成功赋予1号玩家‘镜子’技能", "成功从3号玩家身上学会了 女巫 技能"
+
+// create a board room and return the room number with specified roles
+JSON checkIn(roles); // returns: "开房成功！房间号为 123456789，可以邀请你的朋友到 vrcats.com/ww/123456789 开始游戏" + ws url
+// a websocket connection will be created between the host and the hub to receive broadcast messages
+
+Websocket API:
+
+// broadcast a message to the host, send from hub to host
+void broadcast(message, voiceScript); // returns nothing

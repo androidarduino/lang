@@ -1,0 +1,102 @@
+<meta charset="utf-8"/>
+
+<script language="javascript">
+var roles=[];
+function updateSummary() {
+	// loop through all the input fields, summarize what roles are selected
+	// summarization format: a json object that consists of all roles selected, expanded
+	var inputs = document.getElementsByTagName('input');
+	roles = [];
+	for (var i = 0; i < inputs.length; i += 1) {
+	    if (inputs[i].type == 'checkbox' && inputs[i].checked) {
+	    	switch (inputs[i].id) {
+	    		case "狼兄狼弟":
+	    			roles.push("狼兄");
+	    			roles.push("狼弟");
+	    			break;
+	    		case "两姐妹":
+	    			roles.push("两姐妹");
+	    			roles.push("两姐妹");
+	    			break;
+	    		case "三兄弟":
+	    			roles.push("三兄弟");
+	    			roles.push("三兄弟");
+	    			roles.push("三兄弟");
+	    			break;
+	    		default:
+	    			roles.push(inputs[i].id);
+	    	}
+
+		}
+	    if (inputs[i].type == 'number'){
+	    	for (j=0;j<inputs[i].value;j++) {
+	    		roles.push(inputs[i].id);
+	    	}
+	    }
+	}
+	document.getElementById("summary").textContent = JSON.stringify(roles);
+	document.getElementById("roles").value = JSON.stringify(roles);
+}
+</script>
+
+<h1>
+ 开始游戏，请选择角色
+</h1>
+ <h2> 神牌<h2>
+<p>
+预言家<input type=checkbox id="预言家" onclick="updateSummary()">
+女巫<input type=checkbox id="女巫" onclick="updateSummary()">
+猎人<input type=checkbox id="猎人" onclick="updateSummary()">
+白痴<input type=checkbox id="白痴" onclick="updateSummary()">
+守卫<input type=checkbox id="守卫" onclick="updateSummary()"><br>
+熊<input type=checkbox id="熊" onclick="updateSummary()">
+乌鸦<input type=checkbox id="乌鸦" onclick="updateSummary()">
+狐狸<input type=checkbox id="狐狸" onclick="updateSummary()">
+企鹅<input type=checkbox id="企鹅" onclick="updateSummary()">
+黑商<input type=checkbox id="黑商" onclick="updateSummary()">
+盗贼<input type=checkbox id="盗贼" onclick="updateSummary()"><br>
+魔术师<input type=checkbox id="魔术师" onclick="updateSummary()">
+名媛<input type=checkbox id="名媛" onclick="updateSummary()">
+骑士<input type=checkbox id="骑士" onclick="updateSummary()">
+潜行者<input type=checkbox id="潜行者" onclick="updateSummary()">
+丘比特<input type=checkbox id="丘比特" onclick="updateSummary()">
+通灵师<input type=checkbox id="丘比特" onclick="updateSummary()">
+</p>
+ <h2> 民牌<h2>
+<p>
+村民<input type=number min=0 max=8 value=4 id="村民" onchange="updateSummary()"><br>
+高级村民<input type=checkbox id="高级村民" onclick="updateSummary()">
+长老<input type=checkbox id="长老" onclick="updateSummary()">
+老流氓<input type=checkbox id="老流氓" onclick="updateSummary()">  
+两姐妹<input type=checkbox id="两姐妹" onclick="updateSummary()">
+三兄弟<input type=checkbox id="三兄弟" onclick="updateSummary()">
+守墓人<input type=number min=0 max=4 value=0 id="守墓人" onchange="updateSummary()"><br>
+</p>
+ <h2> 狼牌<h2>
+<p>
+狼人<input type=number min=0 max=8 value=4 id="狼人" onchange="updateSummary()"><br>
+白狼王<input type=checkbox id="白狼王" onclick="updateSummary()">
+狼美人<input type=checkbox id="狼美人" onclick="updateSummary()">
+狼枪<input type=checkbox id="狼枪" onclick="updateSummary()">
+恶魔<input type=checkbox id="恶魔" onclick="updateSummary()">
+种狼<input type=checkbox id="种狼" onclick="updateSummary()"><br>
+隐狼<input type=checkbox id="隐狼" onclick="updateSummary()">
+机械狼<input type=checkbox id="机械狼" onclick="updateSummary()">
+狼兄狼弟<input type=checkbox id="狼兄狼弟" onclick="updateSummary()">
+</p>
+
+ <h2> 其他<h2>
+<p>
+混血儿<input type=checkbox id="混血儿" onclick="updateSummary()">
+野孩子<input type=checkbox id="野孩子" onclick="updateSummary()">
+迷妹<input type=checkbox id="迷妹" onclick="updateSummary()">
+小女孩<input type=checkbox id="小女孩" onclick="updateSummary()">
+</p>
+
+<h2 id = "summary">
+
+</h2>
+<form action="host.html" method="GET">
+<input type=hidden value="" name="roles" id="roles">
+<input type=submit value="确认开局">
+</form>
