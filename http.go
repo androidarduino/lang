@@ -6,6 +6,8 @@ import (
 	"lang/board"
 	"strconv"
 	"log"
+	"io/ioutil"
+	"strings"
 //	"encoding/json"
 )
 
@@ -29,7 +31,21 @@ func checkIn(w http.ResponseWriter, req *http.Request) {
 	meta := map[string]string {"女巫自救": "不能"}
 	roles := []string {"预言家","女巫","猎人","白痴","村民","村民","村民","村民","狼人","狼人","狼人","狼人",}
 	board.New(boardId, roles, meta)
-	message := fmt.Sprintf("开房成功！ 房间号为%d，可以邀请你的好友到 abc.com/%d 开始游戏\n", board.Id, board.Id)
+
+	content, err := ioutil.ReadFile("html/ops.html")
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    log.Println("Reading host html...")
+
+    message := string(content)
+    message = strings.ReplaceAll(message, "1000001", strconv.Itoa(board.Id))
+    message = strings.ReplaceAll(message, "isHost=false", "isHost=true")
+
+    w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	//message := fmt.Sprintf("开房成功！ 房间号为%d，可以邀请你的好友到 abc.com/%d 开始游戏\n", board.Id, board.Id)
 	fmt.Fprintf(w, message)
 }
 
@@ -47,6 +63,7 @@ func sitDown(w http.ResponseWriter, req *http.Request) {
 func operate(w http.ResponseWriter, req *http.Request) {
 	n, number, action := req.FormValue("board"), req.FormValue("number"), req.FormValue("action")
 	num1, num2, num3, skill, card := req.FormValue("num1"), req.FormValue("num2"), req.FormValue("num3"), req.FormValue("skill"), req.FormValue("card")
+	log.Println(fmt.Sprintf("request form values: %v", req.Form))
 
 	boardId, _ = strconv.Atoi(n)
 	board := boards[boardId]
@@ -54,7 +71,11 @@ func operate(w http.ResponseWriter, req *http.Request) {
 	log.Println(fmt.Sprintf("Calling TakeAction with parameters board: %s seat number %s action %s num1 %s num2 %s num3 %s skill %s card %s", n, number, action, num1, num2, num3, skill, card))
 	fmt.Fprintf(w, board.TakeAction(number, action, num1, num2, num3, skill, card))
 	// If state changes, send instruction to the board's host
-	if oldState != board.State {
+	log.Println(fmt.Sprintf("State changed, old: %s new: %s, equals: \n", oldState, board.State, oldState == board.State))
+	if oldState == board.State {
+		log.Println("State not changed, skipping host notification...")
+	} else {
+		log.Println("State changed, sending notification to hosts...")
 		instruction := board.SM[board.State][1]
 		msg := &Message{BoardId: board.Id, Body: instruction}
 		hub.host <- msg
@@ -77,6 +98,7 @@ func main() {
 	http.HandleFunc("/checkIn", checkIn)
 	http.HandleFunc("/sitDown", sitDown)
 	http.HandleFunc("/operate", operate)
+	http.Handle("/", http.FileServer(http.Dir("./html")))
 	// web socket service entry
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(hub, w, r)

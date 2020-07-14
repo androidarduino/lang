@@ -1,6 +1,6 @@
-<script type="text/javascript">
-window.onload = function () {
+<script language="javascript">
     var conn;
+    var pendingVoiceCmd = "";
 
 	function send(msg) {
         if (!conn) {
@@ -13,19 +13,72 @@ window.onload = function () {
         return false;
     };
 
-    function connectToWebSocket(url) {
+    function speak() {
+    	textToSpeak = window.pendingVoiceCmd;
+    	if (textToSpeak == "") {
+    		return;
+    	}
+	    //创建一个 SpeechSynthesisUtterance的实例
+	    var utterance = new SpeechSynthesisUtterance();
+	    // 设置文本
+	    utterance.text = "所有人请闭眼。3，2，1。" + textToSpeak;
+	    //增加中文支持
+	    utterance.lang = 'zh-CN';
+	    utterance.rate =1;
+	    // 添加到队列
+	    window.speechSynthesis.speak(utterance);
+	    window.pendingVoiceCmd = ""
+	}
+
+	var isHost=false;
+	var delaySpeak = false;
+    function connectToWebSocket() {
+    	if (!isHost) {
+    		return;
+    	}
+    	var url = "ws://localhost/ws"
         conn = new WebSocket(url);
         conn.onclose = function (evt) {
-            alert("connection closed " + evt)
+            alert("connection closed " + evt);
         };
         conn.onmessage = function (evt) {
         	//TODO: play voice according to message
-            alert("received message: " + evt)
+            console.log("received message: " + evt.data);
+            window.pendingVoiceCmd = evt.data;
+            console.log(window.pendingVoiceCmd);
+            if (!delaySpeak) {
+            	window.setTimeout(speak(), 2000);
+            }
+        };
+        conn.onopen = function (evt) {
+        	alert("connection open" +evt);
+        	var id = document.getElementById("boardNumber").value;
+        	conn.send(id)
+        };
+        conn.onerror = function (evt) {
+        	alert("connection error" +evt);
         };
     }
-};
-</script>
-<script language ="javascript">
+
+	function doAction() {
+		var xhr = new XMLHttpRequest();
+		oFormElement = document.getElementById("operation");
+		xhr.onreadystatechange = function() {
+		    if (this.readyState == 4 && this.status == 200) {
+		       // Typical action to be performed when the document is ready:
+		       var res = xhr.responseText;
+		       alert(res);
+		       speak();
+		       delaySpeak = false;
+		    }
+		};
+		delaySpeak = true;
+		xhr.open(oFormElement.method, "operate");
+		var data = new FormData(oFormElement);
+		xhr.send(data);
+		return false;
+	}
+
 	var omap = {
 		//五个分别是：号码，号码，号码，技能，牌
 		"房主开局": [0,0,0,0,0],
@@ -37,8 +90,10 @@ window.onload = function () {
 		"确认": [0,0,0,0,0],
 		"讨论完毕": [0,0,0,0,0],
 		"狼人杀": [1,0,0,0,0],
+		"猎人状态": [0,0,0,0,0],
+		"女巫查看": [0,0,0,0,0],
 		"女巫毒": [1,0,0,0,0],
-		"女巫救": [1,0,0,0,0],
+		"女巫救": [0,0,0,0,0],
 		"预言家验": [1,0,0,0,0],
 		"狼美人连": [1,0,0,0,0],
 		"丘比特连": [1,1,0,0,0],
@@ -106,32 +161,35 @@ window.onload = function () {
 		connectToWebSocket(wsUrl+"?id="+seat_number)
 	}
 </script>
-<div id="checkRole" style="display:block">
+<body onload="connectToWebSocket();">
+<div id="checkRole" style="display:none">
 	<h2>请输入房间号，想要的座位号码和昵称后，点击"入座"</h2>
-	房间号：<input id="board" type=number value=0><br>
-	首选座号：<input id="num" type=number min=0 max=20 value=0><br>
+	房间号：<input id="board" type=number value=1000001><br>
+	首选座号：<input id="num" type=number min=0 max=20 value=1><br>
 	昵称：<input id="nick" type=text size=20 value="玩家"><br>
 	<input type=button value="入座" onclick = "sitDown(true)">
 	<input type=button value="返回座位" onclick = "sitDown(false)">
 </div>
-<form id="operation" method="GET" action="http://localhost/operate" style="display:none">
+<form id="operation" method="POST" action="#" onsubmit="return doAction();" style="display:block">
 	<p id = "userInfo">
 
 	</p>
 	<p>
 	<div>
-	<input type=hidden id="boardNumber" name="board" value="">
-	<input type=hidden id="userNumber" value="" name="number">
-	<input type=hidden id="nickName" value="" name="nick">		
+	<input type=text id="boardNumber" name="board" value="1000001">
+	<input type=text id="userNumber" value="1" name="number">
+	<input type=text id="nickName" value="vrcats" name="nick">	
+	<hr>	
 	<select name="action" id="操作" onchange="setGrps()">
 	<option value="房主开局">房主开局</option>
 	<option value="房主查看昨夜信息">房主查看昨夜信息</option>
 	<option value="房主关闭">房主关闭</option>		
 	<option value="房主重新发牌">房主重新发牌</option>
 	<option value="全体查看结果">全体查看结果</option>
-	<option value="确认">确认</option>
+	<option value="猎人状态">猎人状态</option>
 	<option value="讨论完毕">讨论完毕</option>
 	<option value="狼人杀">狼人杀</option>
+	<option value="女巫查看">女巫查看</option>
 	<option value="女巫毒">女巫毒</option>
 	<option value="女巫救">女巫救</option>
 	<option value="预言家验">预言家验</option>
@@ -252,5 +310,6 @@ window.onload = function () {
 	</select>
 	</div>
 	</p>
-<input type=submit value="Go">
+<input type=button value="Go" onclick="doAction()">
 </form>
+</body>

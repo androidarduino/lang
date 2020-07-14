@@ -6,6 +6,7 @@ import (
 	"time"
 	"strconv"
 	"github.com/gorilla/websocket"
+	"fmt"
 )
 
 const (
@@ -54,7 +55,11 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+		//c.hub.broadcast <- message
+		log.Println("Register message for client: " + string(message))
+		id, err := strconv.Atoi(string(message))
+		c.BoardId = id
+
 	}
 }
 
@@ -100,7 +105,10 @@ func (c *Client) writePump() {
 }
 
 func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+	fmt.Println(fmt.Sprintf("serving ws request: %v", r))
 	id := r.FormValue("boardId")
+	fmt.Println(fmt.Sprintf("board id: %s", id))
+
 	boardId, _ = strconv.Atoi(id)
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -109,6 +117,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), BoardId: boardId}
 	client.hub.register <- client
+	log.Println("client registered")
 	go client.writePump()
 	go client.readPump()
 }

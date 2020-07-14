@@ -79,8 +79,8 @@ func (b *Board) New(id int, roles []string, meta map[string]string) Board {
 		"270": {"名媛", "名媛请睁眼，请选择要与哪位玩家共渡春宵。此玩家今晚中刀中毒不会死亡，但你若死亡他也将殉葬。若连睡两晚，对方将死亡。", "done","280"},
 		"280": {"迷妹", "迷妹请睁眼，是否要对你的偶像使用粉或黑的技能，粉可以减少一票，黑可以增加一票", "done","290"},
 		"290": {"潜行者", "潜行者请睁眼，请选择是否要暗杀你白天投票的玩家", "done","election"},
-		"election": {"房主", "请所有人整理表情，想竞选警长的玩家请举手。5，4，3，2，1，所有人睁眼。选举结束后请房主查看昨夜信息", "done", "end"},
-		"end": {"房主", "请房主关闭程序继续游戏", "done", "EXIT"},
+		"election": {"所有人", "请所有人整理表情，想竞选警长的玩家请举手。5，4，3，2，1，所有人睁眼。选举结束后请房主查看昨夜信息", "done", "end"},
+		"end": {"所有人", "请房主关闭程序继续游戏", "done", "EXIT"},
 	}
 	return *b
 }
@@ -113,7 +113,8 @@ func (board* Board) TakeAction(seatNumber string, action string, n1 string, n2 s
 */
 	//检查是否有权限做这个事情，发起action的人身份必须与当前轮次操作人身份相符
 	if (!board.inOperatorGroup(seat)) {
-		return "没有操作权限"
+		operator := board.SM[board.State][0]
+		return fmt.Sprintf("当前是 %s 操作的轮次，您没有操作权限。", operator)
 	}
 	board.ActivePlayer = board.Player(seat)
 	message := ""
@@ -203,6 +204,7 @@ func (board* Board) TakeAction(seatNumber string, action string, n1 string, n2 s
 		case "恶魔验":
 			message = board.deamonExamine(num1)
 	}
+	log.Println("返回信息：" + message)
 	return message
 }
 
@@ -280,7 +282,7 @@ func (b *Board) allSeated() bool {
 
 func (b *Board) allViewed() bool {
 	for _, player := range b.Seats {
-		if !player.HasLabel(b.State+"_已查看") {
+		if !player.HasLabel(b.State+"已查看") {
 			return false
 		}
 	}
@@ -385,6 +387,9 @@ func (b *Board) witchResult() string {
 	//不需要修改状态机，只有女巫选择救或毒时才修改状态机
 }
 func (b *Board) slaughter(num1 int) string {
+	if num1 == 0 {
+		return "狼人空刀成功。"
+	}
 	player := b.ActivePlayer
 	target := b.Seats[num1]
 	if (target.HasLabel("恶魔")||target.HasLabel("狼枪")||target.HasLabel("狼美人")) {

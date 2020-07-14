@@ -1,5 +1,9 @@
 package main
 
+import (
+	"log"
+	"fmt"
+)
 type Hub struct {
 	clients    map[*Client]bool
 	broadcast  chan []byte
@@ -34,6 +38,7 @@ func newHub() *Hub {
 func (h *Hub) sendMsg(msg *Message) {
 	for client := range h.clients {
 		if client.BoardId == msg.BoardId {
+			log.Println(fmt.Sprintf("sending message to client %d", client.BoardId))
 			client.send <- []byte(msg.Body)
 		}
 	}
