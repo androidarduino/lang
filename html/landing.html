@@ -2,6 +2,8 @@
 
 <script language="javascript">
 var roles=[];
+var meta = {};
+
 function updateSummary() {
 	// loop through all the input fields, summarize what roles are selected
 	// summarization format: a json object that consists of all roles selected, expanded
@@ -34,14 +36,22 @@ function updateSummary() {
 	    	}
 	    }
 	}
-	document.getElementById("summary").textContent = JSON.stringify(roles);
-	document.getElementById("roles").value = JSON.stringify(roles);
+	var options = document.getElementsByTagName('select');
+	for (var i=0;i<options.length;i+=1) {
+		var item = options[i];
+		console.log(item.id);
+		meta[item.id] = item[item.selectedIndex].value;
+	}
+	var json = "{ \"roles\": " + JSON.stringify(roles) + ", \"meta\":" + JSON.stringify(meta) + "}";
+	document.getElementById("summary").textContent = json;
+	document.getElementById("roles").value = json;
 }
 </script>
 
 <h1>
- 开始游戏，请选择角色
+请选择狼人局的角色配置和设置
 </h1>
+<hr>
  <h2> 神牌<h2>
 <p>
 预言家<input type=checkbox id="预言家" onclick="updateSummary()">
@@ -91,6 +101,32 @@ function updateSummary() {
 野孩子<input type=checkbox id="野孩子" onclick="updateSummary()">
 迷妹<input type=checkbox id="迷妹" onclick="updateSummary()">
 小女孩<input type=checkbox id="小女孩" onclick="updateSummary()">
+</p>
+<hr>
+<p>	<label>女巫自救</label>
+	<select name="action" id="女巫自救" onchange="updateSummary()">
+	<option value="不能">不能</option>
+	<option value="第一夜">第一夜</option>
+	<option value="可以">可以</option>
+</select>
+</p>
+<p>	<label>同守同救</label>
+	<select name="action" id="同守同救" onchange="updateSummary()">
+	<option value="死亡">死亡</option>
+	<option value="不死">不死</option>
+</select>
+</p>
+<p>	<label>盗贼</label>
+	<select name="action" id="盗贼" onchange="updateSummary()">
+	<option value="有狼必选">有狼必选</option>
+	<option value="随意选">随意选</option>
+</select>
+</p>
+<p>	<label>丘比特</label>
+	<select name="action" id="丘比特" onchange="updateSummary()">
+	<option value="必须连">必须连</option>
+	<option value="可以不连">可以不连</option>
+</select>
 </p>
 
 <h2 id = "summary">

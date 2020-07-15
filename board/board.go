@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
+	"sort"
+	"math/rand"
+	"time"
 )
 
 type Board struct{
@@ -38,6 +42,7 @@ func (b *Board) New(id int, roles []string, meta map[string]string) Board {
 	b.Seats = make(map[int]*Player)
 	b.Id = id
 	b.State = "setup"
+	b.report = append(b.report, "昨夜信息：\n")
 	//TODO 处理盗贼的牌，数量-2
 	b.SeatsCount = len(roles)
 	b.meta = meta
@@ -47,7 +52,8 @@ func (b *Board) New(id int, roles []string, meta map[string]string) Board {
 		"setup": {"所有人", "生成房间并洗牌，如有盗贼生成盗贼选择，请大家入座查看身份", "allSeated","begin"},
 		"begin": {"所有人", "所有玩家已经入座完毕并查看了身份，请点击确认开始游戏", "done","10"},
 		"10": {"混血儿", "混血儿请睁眼，选择一个号码作为爸爸","done","20"},
-		"20": {"野孩子", "野孩子请睁眼，请选择一个号码作为榜样，榜样死亡你将变成狼人", "done","25"},
+		"20": {"野孩子", "野孩子请睁眼，请选择一个号码作为榜样，榜样死亡你将变成狼人", "done","22"},
+		"22": {"企鹅", "企鹅请睁眼，请选择一位玩家冷冻他的技能", "done","25"},
 		"25": {"迷妹", "迷妹请睁眼，请选择你的偶像", "done","30"},
 		"30": {"盗贼", "盗贼请睁眼查看状态，从两张牌中选择一张作为自己的身份，如果有狼牌必须选择狼牌", "done","40"},
 		"40": {"丘比特", "丘比特请睁眼，请选择两位玩家成为情侣。如果这两位玩家一好人一狼，你们三个会成为第三方", "done","43"},
@@ -72,23 +78,24 @@ func (b *Board) New(id int, roles []string, meta map[string]string) Board {
 		"205": {"机械狼", "机械狼请睁眼，请选择是否要使用学到的技能", "done","208"},
 		"208": {"种枪", "种狼请睁眼，请选择你是否要感染今天被杀的玩家", "done","210"},
 		"210": {"通灵师", "通灵师请睁眼，请选择一个玩家查验他的具体身份", "done","220"},
-		"220": {"狐狸", "狐狸请睁眼，请选择一位玩家查验他和他身边两位活着的玩家有没有狼人", "done","225"},
-		"225": {"企鹅", "企鹅请睁眼，请选择一位玩家冷冻他的技能", "done","230"},
+		"220": {"狐狸", "狐狸请睁眼，请选择一位玩家查验他和他身边两位活着的玩家有没有狼人", "done","230"},
 		"230": {"乌鸦", "乌鸦请睁眼，请选择是否要诽谤一位玩家。受到诽谤后投票放逐时此玩家会多出一票", "done","250"},
 		"250": {"禁言长老", "禁言长老请睁眼，请选择是否要禁止一位玩家明天的发言", "done","270"},
 		"270": {"名媛", "名媛请睁眼，请选择要与哪位玩家共渡春宵。此玩家今晚中刀中毒不会死亡，但你若死亡他也将殉葬。若连睡两晚，对方将死亡。", "done","280"},
 		"280": {"迷妹", "迷妹请睁眼，是否要对你的偶像使用粉或黑的技能，粉可以减少一票，黑可以增加一票", "done","290"},
-		"290": {"潜行者", "潜行者请睁眼，请选择是否要暗杀你白天投票的玩家", "done","election"},
-		"election": {"所有人", "请所有人整理表情，想竞选警长的玩家请举手。5，4，3，2，1，所有人睁眼。选举结束后请房主查看昨夜信息", "done", "end"},
-		"end": {"所有人", "请房主关闭程序继续游戏", "done", "EXIT"},
+		"290": {"潜行者", "潜行者请睁眼，请选择是否要暗杀你白天投票的玩家", "done","end"},
+		"end": {"所有人", "", "done", "EXIT"},
+		"EXIT": {"所有人", "请所有人整理表情，想竞选警长的玩家请举手。5，4，3，2，1，所有人睁眼。选举结束后请房主查看昨夜信息。", "done", ""},
 	}
+	//开牌前洗牌
+	b.shuffle()
 	return *b
 }
 
 func (b* Board) inOperatorGroup(seatNumber int) bool {
 	player := b.Player(seatNumber)
 	role := b.SM[b.State][0]
-	log.Println(fmt.Sprintf("正在检查：%v 是否属于 %s 团队，结果%b。", player, role, player.HasLabel(role)))
+	//log.Println(fmt.Sprintf("正在检查：%v 是否属于 %s 团队，结果%b。", player, role, player.HasLabel(role)))
 
 	return player.HasLabel(role)
 }
@@ -116,6 +123,7 @@ func (board* Board) TakeAction(seatNumber string, action string, n1 string, n2 s
 		operator := board.SM[board.State][0]
 		return fmt.Sprintf("当前是 %s 操作的轮次，您没有操作权限。", operator)
 	}
+	//TODO: 检查是否被冻，如果是任何一个狼人被冻，则所有狼人都不可操作
 	board.ActivePlayer = board.Player(seat)
 	message := ""
 	switch(action) {
@@ -259,12 +267,15 @@ func (b *Board) hasRole(role string) bool {
 }
 
 func (b *Board) nextStep() {
-	//TODO： websocket.send("房主", "所有人请闭眼   ")
+	//TODO： 有丘比特或黑商的板子，不能跳过43和100两个状态
 	//跳过所有不存在的角色
+	if b.State == "EXIT" {
+		return
+	}
 	s := b.State
 	nextState := b.SM[b.State][3]
 	b.State = nextState
-	for !b.hasRole(b.SM[b.State][0]) && b.State!="election" {
+	for  b.State!="EXIT" && !b.hasRole(b.SM[b.State][0]) {
 		nextState := b.SM[b.State][3]
 		b.State = nextState
 	}
@@ -326,24 +337,121 @@ func (b *Board) endGame() string {
 }
 func (b *Board) shuffle() string {
 	//保持座位不变，重新安排玩家的身份和能力，只有在开局以前可以调用
-	return "TODO"
+	rand.Seed(time.Now().UnixNano())
+	for i := len(b.Seats); i > 0; i-- { // Fisher–Yates shuffle
+	    j := rand.Intn(i) + 1
+	    log.Println("swapping %d and %d", i, j)
+	    b.Seats[i], b.Seats[j] = b.Seats[j], b.Seats[i]
+	}
+	for idx, player := range b.Seats {
+		log.Println(idx)
+		log.Println(player)
+		player.Seat = idx
+	}
+	b.Println()
+	return "洗牌成功。"
 }
+
+func (b *Board) Println() {
+	log.Println("Here is the board ==================")
+	for _, p := range b.Seats {
+		log.Println(*p)
+	}
+	log.Println(" ==================")
+
+}
+
 func (b *Board) lastNightResult() string {
+	log.Println("正在计算昨夜结果....")
 	//TODO: 计算昨夜死讯，需要考虑的情况非常多
-	return "TODO"
+	//{"被刀","被毒","被救","被连","被守","被睡","被潜","情侣","被守毒","被感染"}
+	b.Println()
+
+	death := []*Player {}
+	for _, p := range b.Seats {
+		//计算每个玩家是否死亡，或半死
+		if p.HasLabel("被睡") {
+			continue
+		}
+		if p.HasLabel("被刀") {
+			if p.HasLabel("被救") {
+				if p.HasLabel("被守") {
+					death = append(death, p)
+				} else {
+					//healed
+				}
+			} else {
+				death = append(death, p)
+			}
+		}
+		if p.HasLabel("被毒") {
+			if p.HasLabel("被守毒") {
+				//guarded
+			} else {
+				death = append(death, p)
+			}
+		}
+		if p.HasLabel("被潜") || p.HasLabel("被掏空") || p.HasLabel("被反噬") {
+			death = append(death, p)
+		}
+	}
+	log.Println(fmt.Sprintf("found death: %v", death))
+	//处理被连被睡情侣多死的情况，要循环四次，因为可能有连环死
+	for i := 0; i < 4; i++ {
+		for _, p := range death {
+			if p.HasLabel("狼美人") {
+				for _, k := range b.Seats {
+					if k.HasLabel("被连") {
+						death = append(death, k)
+					}
+				}
+			}
+			if p.HasLabel("名媛") {
+				for _, k := range b.Seats {
+					if k.HasLabel("被睡") {
+						death = append(death, k)
+					}
+				}			
+			}
+			if p.HasLabel("情侣") {
+				for _, k := range b.Seats {
+					if k.HasLabel("被睡") {
+						death = append(death, k)
+					}
+				}	
+			}
+		}
+	}
+	log.Println(fmt.Sprintf("found death afterward: %v", death))
+	dn := map[int]bool {}
+
+	for _, p := range death {
+		dn[p.Seat] = true
+	}
+	for n, _ := range dn {
+		b.report = append(b.report, fmt.Sprintf("昨晚%d号玩家死亡。", n))
+	}
+
+	if len(dn) == 0 {
+		b.report = append(b.report, fmt.Sprintf("昨晚是平安夜。"))
+	}
+
+	sort.Strings(b.report)
+	b.nextStep()
+	return strings.Join(b.report, "\n")
 }
 //用作猎人，狼枪进行确认开枪状态
 func (b *Board) confirm() string {
 	b.nextStep()
-	if (b.ActivePlayer.HasLabel("被毒")) {
-		return "你昨晚被毒了，明天无法开枪。"
+	if (b.ActivePlayer.HasLabel("被毒")||b.ActivePlayer.HasLabel("被冻")) {
+		return "你昨晚被毒或被冻了，明天无法开枪。"
 	} else {
 		return "你昨晚没有被毒，明天可以正常开枪。"
 	}
 }
 //用于全体玩家查看情侣信息，所有玩家查看完成后才可以进入下一步
 func (b *Board) checkValentine() string {
-	b.ActivePlayer.Label(b.State+"_已查看")
+	b.ActivePlayer.Label(b.State+"已查看")
 	if b.allViewed() {
 		b.nextStep()
 	}
@@ -361,7 +469,7 @@ func (b *Board) checkValentine() string {
 }
 //用于全体玩家查看幸运儿信息，所有玩家查看完成后才可以进入下一步
 func (b *Board) checkLucky() string {
-	b.ActivePlayer.Label(b.State+"_已查看")
+	b.ActivePlayer.Label(b.State+"已查看")
 	if b.allViewed() {
 		b.nextStep()
 	}
@@ -547,8 +655,9 @@ func (b *Board) endow(num1 int, skill string) string {
 			b.Log(fmt.Sprintf("%d号黑商给了%d号玩家‘%s’技能", player.Seat, num1, skill))
 		} else {
 			b.Log(fmt.Sprintf("%d号黑商给了%d号狼人‘%s’技能， 被反噬而死", player.Seat, num1, skill))
-			player.Skills["寿命"] = 0
-			b.Report(fmt.Sprintf("昨夜%d死亡。", player.Seat))
+			//player.Skills["寿命"] = 0
+			//b.Report(fmt.Sprintf("昨夜%d死亡。", player.Seat))
+			player.Label("被反噬")
 		}
 		b.nextStep()
 	}
@@ -669,8 +778,9 @@ func (b *Board) sleep(num1 int) string {
 	}
 	if (strconv.Itoa(num1) == l) {
 		b.Log(fmt.Sprintf("%d号名媛连续两晚睡了%d号玩家致使其死亡。", player.Seat, num1))
-		target.Skills["寿命"] = 0
-		b.Report(fmt.Sprintf("昨夜%d死亡。", target.Seat))
+		//target.Skills["寿命"] = 0
+		//b.Report(fmt.Sprintf("昨夜%d死亡。", target.Seat))
+		target.Label("被掏空")
 		return fmt.Sprintf("%d号玩家因为连续两晚与你共度良宵精尽人亡。", num1)
 	}
 	b.meta["昨晚被睡"] = strconv.Itoa(num1)

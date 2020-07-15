@@ -8,18 +8,27 @@ import (
 	"log"
 	"io/ioutil"
 	"strings"
-//	"encoding/json"
+	"encoding/json"
 )
+
+type BoardConfig struct {
+	Roles []string `json:"roles"`
+	Meta map[string]string `json:"meta"`
+}
 
 // create a board room and return the room number with specified roles
 // JSON checkIn(roles); // returns: "开房成功！房间号为 123456789，可以邀请你的朋友到 vrcats.com/ww/123456789 开始游戏" + ws url
 // a websocket conne
 func checkIn(w http.ResponseWriter, req *http.Request) {
 	rolesJson := req.FormValue("roles")
-	//var roles 
-	//json.Unmarshal(rolesJson, roles)
 
-	fmt.Fprintf(w, rolesJson)
+	log.Println("input json", rolesJson)
+
+	var config BoardConfig
+	json.Unmarshal([]byte(rolesJson), &config)
+
+	log.Println("unmarshalled json", config)
+
 	//把输入值变成数组，创建一个局，把每一个元素加入其中
 	board := new(board.Board)
 	boardId = boardId + 1
@@ -28,9 +37,13 @@ func checkIn(w http.ResponseWriter, req *http.Request) {
 	//TODO：转换输入数据为json对象，从中取出roles数组
 	//roles := parseRoles(roleJson)
 	//TODO: 从输入里获取本局配置
-	meta := map[string]string {"女巫自救": "不能"}
-	roles := []string {"预言家","女巫","猎人","白痴","村民","村民","村民","村民","狼人","狼人","狼人","狼人",}
+	//meta := map[string]string {"女巫自救": "不能"}
+	//roles := []string {"预言家","女巫","猎人","白痴","村民","村民","村民","村民","狼人","狼人","狼人","狼人",}
+	roles := config.Roles
+	meta := config.Meta
 	board.New(boardId, roles, meta)
+
+	board.Println()
 
 	content, err := ioutil.ReadFile("html/ops.html")
     if err != nil {

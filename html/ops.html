@@ -15,19 +15,23 @@
 
     function speak() {
     	textToSpeak = window.pendingVoiceCmd;
+    	speakIt("所有人请闭眼。3，2，1。" + window.pendingVoiceCmd)
+	    window.pendingVoiceCmd = ""
+    }
+
+    function speakIt(textToSpeak) {
     	if (textToSpeak == "") {
     		return;
     	}
 	    //创建一个 SpeechSynthesisUtterance的实例
 	    var utterance = new SpeechSynthesisUtterance();
 	    // 设置文本
-	    utterance.text = "所有人请闭眼。3，2，1。" + textToSpeak;
+	    utterance.text = textToSpeak;
 	    //增加中文支持
 	    utterance.lang = 'zh-CN';
 	    utterance.rate =1;
 	    // 添加到队列
 	    window.speechSynthesis.speak(utterance);
-	    window.pendingVoiceCmd = ""
 	}
 
 	var isHost=false;
@@ -67,6 +71,10 @@
 		    if (this.readyState == 4 && this.status == 200) {
 		       // Typical action to be performed when the document is ready:
 		       var res = xhr.responseText;
+		       if(res.startsWith("昨夜信息")) {
+		       		speakIt(res + "\n");
+		       		return;
+		       }
 		       alert(res);
 		       speak();
 		       delaySpeak = false;
@@ -82,7 +90,7 @@
 	var omap = {
 		//五个分别是：号码，号码，号码，技能，牌
 		"房主开局": [0,0,0,0,0],
-		"房主查看昨夜信息": [0,0,0,0,0],
+		"房主查看昨夜结果": [0,0,0,0,0],
 		"房主关闭": [0,0,0,0,0],
 		"房主重新发牌": [0,0,0,0,0],
 		"全体查看结果": [0,0,0,0,0],
@@ -182,7 +190,7 @@
 	<hr>	
 	<select name="action" id="操作" onchange="setGrps()">
 	<option value="房主开局">房主开局</option>
-	<option value="房主查看昨夜信息">房主查看昨夜信息</option>
+	<option value="房主查看昨夜结果">房主查看昨夜结果</option>
 	<option value="房主关闭">房主关闭</option>		
 	<option value="房主重新发牌">房主重新发牌</option>
 	<option value="全体查看结果">全体查看结果</option>
