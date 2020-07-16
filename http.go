@@ -21,6 +21,8 @@ type BoardConfig struct {
 // a websocket conne
 func checkIn(w http.ResponseWriter, req *http.Request) {
 	rolesJson := req.FormValue("roles")
+	n, nickName := req.FormValue("seat"), req.FormValue("nick")
+	seatNumber, _ := strconv.Atoi(n)
 
 	log.Println("input json", rolesJson)
 
@@ -42,6 +44,10 @@ func checkIn(w http.ResponseWriter, req *http.Request) {
 	roles := config.Roles
 	meta := config.Meta
 	board.New(boardId, roles, meta)
+	sitDown := board.ViewCard(seatNumber, nickName)
+	//Process sitDown, extract seat number and assign
+	responses := strings.split(sitDown, "\n")
+	actualSeat := responses[0]
 
 	board.Println()
 
@@ -54,6 +60,7 @@ func checkIn(w http.ResponseWriter, req *http.Request) {
 
     message := string(content)
     message = strings.ReplaceAll(message, "1000001", strconv.Itoa(board.Id))
+    message = strings.ReplaceAll(message, "991", actualSeat)
     message = strings.ReplaceAll(message, "isHost=false", "isHost=true")
 
     w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -69,7 +76,23 @@ func sitDown(w http.ResponseWriter, req *http.Request) {
 	boardId, _ := strconv.Atoi(b)
 	board := boards[boardId]
 	s, _ := strconv.Atoi(n)
-	message := board.ViewCard(s, k)
+	sitDown := board.ViewCard(s, k)
+	responses := strings.split(sitDown, "\n")
+	actualSeat := responses[0]
+
+	content, err := ioutil.ReadFile("html/ops.html")
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    log.Println("Reading host html...")
+
+    message := string(content)
+    message = strings.ReplaceAll(message, "1000001", b)
+    message = strings.ReplaceAll(message, "991", actualSeat)
+    
+    w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
 	fmt.Fprintf(w, message)
 }
 

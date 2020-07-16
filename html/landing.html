@@ -134,5 +134,7 @@ function updateSummary() {
 </h2>
 <form action="http://localhost/checkIn" method="POST">
 <input type=hidden value="" name="roles" id="roles">
+<label>房主首选座位：</label><input type=number value="1" min=1 max=20 name="seat" id="seat">
+<label>房主昵称：</label><input type=text name="nick" id="nick">
 <input type=submit value="确认开局">
 </form>
