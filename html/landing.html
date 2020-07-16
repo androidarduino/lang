@@ -1,4 +1,5 @@
 <meta charset="utf-8"/>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
 
 <script language="javascript">
 var roles=[];
@@ -31,6 +32,9 @@ function updateSummary() {
 
 		}
 	    if (inputs[i].type == 'number'){
+	    	if (inputs[i].id == "seat") {
+	    		continue;
+	    	}
 	    	for (j=0;j<inputs[i].value;j++) {
 	    		roles.push(inputs[i].id);
 	    	}
@@ -48,93 +52,146 @@ function updateSummary() {
 }
 </script>
 
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<body style="font-size: 3.5vmax;">
+<div class="container" width="800">
 <h1>
 请选择狼人局的角色配置和设置
 </h1>
 <hr>
- <h2> 神牌<h2>
-<p>
-预言家<input type=checkbox id="预言家" onclick="updateSummary()">
-女巫<input type=checkbox id="女巫" onclick="updateSummary()">
-猎人<input type=checkbox id="猎人" onclick="updateSummary()">
-白痴<input type=checkbox id="白痴" onclick="updateSummary()">
-守卫<input type=checkbox id="守卫" onclick="updateSummary()"><br>
-熊<input type=checkbox id="熊" onclick="updateSummary()">
-乌鸦<input type=checkbox id="乌鸦" onclick="updateSummary()">
-狐狸<input type=checkbox id="狐狸" onclick="updateSummary()">
-企鹅<input type=checkbox id="企鹅" onclick="updateSummary()">
-黑商<input type=checkbox id="黑商" onclick="updateSummary()">
-盗贼<input type=checkbox id="盗贼" onclick="updateSummary()"><br>
-魔术师<input type=checkbox id="魔术师" onclick="updateSummary()">
-名媛<input type=checkbox id="名媛" onclick="updateSummary()">
-骑士<input type=checkbox id="骑士" onclick="updateSummary()">
-潜行者<input type=checkbox id="潜行者" onclick="updateSummary()">
-丘比特<input type=checkbox id="丘比特" onclick="updateSummary()">
-通灵师<input type=checkbox id="丘比特" onclick="updateSummary()">
-</p>
- <h2> 民牌<h2>
-<p>
-村民<input type=number min=0 max=8 value=4 id="村民" onchange="updateSummary()"><br>
-高级村民<input type=checkbox id="高级村民" onclick="updateSummary()">
-长老<input type=checkbox id="长老" onclick="updateSummary()">
-老流氓<input type=checkbox id="老流氓" onclick="updateSummary()">  
-两姐妹<input type=checkbox id="两姐妹" onclick="updateSummary()">
-三兄弟<input type=checkbox id="三兄弟" onclick="updateSummary()">
-守墓人<input type=number min=0 max=4 value=0 id="守墓人" onchange="updateSummary()"><br>
-</p>
- <h2> 狼牌<h2>
-<p>
-狼人<input type=number min=0 max=8 value=4 id="狼人" onchange="updateSummary()"><br>
-白狼王<input type=checkbox id="白狼王" onclick="updateSummary()">
-狼美人<input type=checkbox id="狼美人" onclick="updateSummary()">
-狼枪<input type=checkbox id="狼枪" onclick="updateSummary()">
-恶魔<input type=checkbox id="恶魔" onclick="updateSummary()">
-种狼<input type=checkbox id="种狼" onclick="updateSummary()"><br>
-隐狼<input type=checkbox id="隐狼" onclick="updateSummary()">
-机械狼<input type=checkbox id="机械狼" onclick="updateSummary()">
-狼兄狼弟<input type=checkbox id="狼兄狼弟" onclick="updateSummary()">
-</p>
 
- <h2> 其他<h2>
-<p>
-混血儿<input type=checkbox id="混血儿" onclick="updateSummary()">
-野孩子<input type=checkbox id="野孩子" onclick="updateSummary()">
-迷妹<input type=checkbox id="迷妹" onclick="updateSummary()">
-小女孩<input type=checkbox id="小女孩" onclick="updateSummary()">
-</p>
-<hr>
-<p>	<label>女巫自救</label>
-	<select name="action" id="女巫自救" onchange="updateSummary()">
+
+<div class="container-fluid bd-highlight rounded mx-auto card rounded p-3 m-5 bg-light border-secondary">
+<h2> 神牌</h2>
+	  <div class="row">
+<span class="label label-success col m-3"> <input type=checkbox id="预言家" onclick="updateSummary()"> 预言家 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="女巫" onclick="updateSummary()"> 女巫 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="猎人" onclick="updateSummary()"> 猎人 </span>
+</div>
+	  <div class="row">
+<span class="label label-success col m-3"> <input type=checkbox id="白痴" onclick="updateSummary()"> 白痴 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="守卫" onclick="updateSummary()"> 守卫 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="骑士" onclick="updateSummary()"> 骑士 </span>
+</div>
+	  <div class="row">
+<span class="label label-success col m-3"> <input type=checkbox id="丘比特" onclick="updateSummary()"> 丘比特 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="盗贼" onclick="updateSummary()"> 盗贼 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="黑商" onclick="updateSummary()"> 黑商 </span>
+</div>
+	  <div class="row">
+<span class="label label-success col m-3"> <input type=checkbox id="魔术师" onclick="updateSummary()"> 魔术师 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="名媛" onclick="updateSummary()"> 名媛 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="潜行者" onclick="updateSummary()"> 潜行者 </span>
+</div>
+	  <div class="row">
+<span class="label label-success col m-3"> <input type=checkbox id="通灵师" onclick="updateSummary()"> 通灵师 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="熊" onclick="updateSummary()"> 熊 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="乌鸦" onclick="updateSummary()"> 乌鸦 </span>
+</div>
+	  <div class="row">
+<span class="label label-success col m-3"> <input type=checkbox id="狐狸" onclick="updateSummary()"> 狐狸 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="企鹅" onclick="updateSummary()"> 企鹅 </span>
+<span class="label label-success col m-3"> </span> 
+</div>
+</div>
+<div class="container-fluid bd-highlight rounded mx-auto card rounded p-3 m-5 bg-light border-secondary">
+ <h2> 民牌</h2>
+<div class="row">
+<span class="label label-success col m-3"> <input class="text-dark" type=number min=0 max=8 value=4 id="村民" onchange="updateSummary()" width=20> 村民 </span>
+<span class="label label-success col m-3"> <input class="text-dark" type=number min=0 max=4 value=0 id="守墓人" onchange="updateSummary()"> 守墓人 </span>
+</span>
+</div>
+<div class="row">
+<span class="label label-success col m-3"> <input type=checkbox id="长老" onclick="updateSummary()"> 长老 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="老流氓" onclick="updateSummary()"> 老流氓 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="两姐妹" onclick="updateSummary()"> 两姐妹 </span>
+</div>
+<div class="row">
+<span class="label label-success col m-3"> <input type=checkbox id="三兄弟" onclick="updateSummary()"> 三兄弟 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="高级村民" onclick="updateSummary()"> 高级村民 </span>
+<span class="label label-success col m-3"> </span> 
+</div>
+</div>
+<div class="container-fluid bd-highlight rounded mx-auto card rounded p-3 m-5 bg-light border-secondary">
+
+ <h2> 狼牌</h2>
+<div class="row">
+<span class="label label-success col m-3"> <input class="text-dark"  type=number min=0 max=8 value=4 id="狼人" onchange="updateSummary()"> 狼人 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="白狼王" onclick="updateSummary()"> 白狼王 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="狼美人" onclick="updateSummary()"> 狼美人 </span>
+</div>
+<div class="row">
+<span class="label label-success col m-3"> <input type=checkbox id="狼枪" onclick="updateSummary()"> 狼枪 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="恶魔" onclick="updateSummary()"> 恶魔 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="种狼" onclick="updateSummary()"> 种狼 </span>
+</div>
+<div class="row">
+<span class="label label-success col m-3"> <input type=checkbox id="隐狼" onclick="updateSummary()"> 隐狼 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="机械狼" onclick="updateSummary()"> 机械狼 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="狼兄狼弟" onclick="updateSummary()"> 狼兄狼弟 </span>
+</div>
+</div>
+
+<div class="container-fluid bd-highlight rounded mx-auto card rounded p-3 m-5 bg-light border-secondary">
+<h2> 其他</h2>
+
+<div class="row">
+<span class="label label-success col m-3"> <input type=checkbox id="混血儿" onclick="updateSummary()"> 混血儿 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="野孩子" onclick="updateSummary()"> 野孩子 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="迷妹" onclick="updateSummary()"> 迷妹 </span>
+<span class="label label-success col m-3"> <input type=checkbox id="小女孩" onclick="updateSummary()"> 小女孩 </span>
+</div>
+</div>
+
+<div class="container-fluid bd-highlight rounded mx-auto card rounded p-3 m-5 bg-light border-secondary">
+<h2> 参数设置</h2>
+<div class="row"> 
+<span class="label label-success col m-3">
+	<label>女巫自救</label>
+	<select class="text-dark"  name="action" id="女巫自救" onchange="updateSummary()">
 	<option value="不能">不能</option>
 	<option value="第一夜">第一夜</option>
 	<option value="可以">可以</option>
 </select>
-</p>
-<p>	<label>同守同救</label>
-	<select name="action" id="同守同救" onchange="updateSummary()">
+</span>
+<span class="label label-success col m-3">
+	<label>同守同救</label>
+	<select class="text-dark"  name="action" id="同守同救" onchange="updateSummary()">
 	<option value="死亡">死亡</option>
 	<option value="不死">不死</option>
 </select>
-</p>
-<p>	<label>盗贼</label>
-	<select name="action" id="盗贼" onchange="updateSummary()">
+</span>
+</div>
+<div class="row"> 
+<span class="label label-success col m-3">
+	<label>盗贼</label>
+	<select class="text-dark"  name="action" id="盗贼" onchange="updateSummary()">
 	<option value="有狼必选">有狼必选</option>
 	<option value="随意选">随意选</option>
 </select>
-</p>
-<p>	<label>丘比特</label>
-	<select name="action" id="丘比特" onchange="updateSummary()">
+</span>
+<span class="label label-success col m-3">
+	<label>丘比特</label>
+	<select class="text-dark"  name="action" id="丘比特" onchange="updateSummary()">
 	<option value="必须连">必须连</option>
 	<option value="可以不连">可以不连</option>
 </select>
-</p>
+</span>
+</div>
+</div>
+<h4 id = "summary">
 
-<h2 id = "summary">
-
-</h2>
+</h4>
+<div class="container p-3 my-3 m-5 bg-info text-white align-items-center container-fluid  rounded">
 <form action="http://localhost/checkIn" method="POST">
-<input type=hidden value="" name="roles" id="roles">
-<label>房主首选座位：</label><input type=number value="1" min=1 max=20 name="seat" id="seat">
-<label>房主昵称：</label><input type=text name="nick" id="nick">
-<input type=submit value="确认开局">
+<input class="text-dark" type=hidden value="" name="roles" id="roles">
+<div class="row"><span class="label label-info col m-3 text-left">房主首选座位：<input class="text-dark"  type=number value="1" min=1 max=20 name="seat" id="seat"></span></div>
+<div class="row"><span class="label label-info col m-3 text-left">房主昵称：<input class="text-dark"  type=text name="nick" id="nick"></span></div>
+<input class="text-dark btn-light" type=submit value="确认开局">
 </form>
+</div>
+</div>
+<body>

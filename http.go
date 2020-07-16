@@ -46,7 +46,7 @@ func checkIn(w http.ResponseWriter, req *http.Request) {
 	board.New(boardId, roles, meta)
 	sitDown := board.ViewCard(seatNumber, nickName)
 	//Process sitDown, extract seat number and assign
-	responses := strings.split(sitDown, "\n")
+	responses := strings.Split(sitDown, "\n")
 	actualSeat := responses[0]
 
 	board.Println()
@@ -77,7 +77,7 @@ func sitDown(w http.ResponseWriter, req *http.Request) {
 	board := boards[boardId]
 	s, _ := strconv.Atoi(n)
 	sitDown := board.ViewCard(s, k)
-	responses := strings.split(sitDown, "\n")
+	responses := strings.Split(sitDown, "\n")
 	actualSeat := responses[0]
 
 	content, err := ioutil.ReadFile("html/ops.html")
@@ -90,7 +90,7 @@ func sitDown(w http.ResponseWriter, req *http.Request) {
     message := string(content)
     message = strings.ReplaceAll(message, "1000001", b)
     message = strings.ReplaceAll(message, "991", actualSeat)
-    
+
     w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	fmt.Fprintf(w, message)

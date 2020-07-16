@@ -1,6 +1,18 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+<div class="container p-3 my-3 m-5 bg-primary text-white align-items-center">
+<h1>欢迎来到狼叔小助手</h1>
+<hr>
 <form action="http://localhost/sitDown" method="POST">
-<label>房间号码：</label><input type=number value="" name="board" id="board">
-<label>首选座位：</label><input type=number value="1" min=1 max=20 name="number" id="number">
-<label>昵称：</label><input type=text name="nick" id="nick">
-<input type=submit value="进入房间">
+<div class="form-group">
+<label for="board">房间号码：</label>
+<input class="form-control" place-holder="七位数字" type=text value="" name="board" id="board">
+</div>
+<div class="form-group">
+<label for="number">首选座位：</label><input class="form-control" place-holder="1-20" type=number value="1" min=1 max=20 name="number" id="number">
+</div>
+<div class="form-group">
+<label for="nick">昵称：</label><input class="form-control" place-holder="字母字符" type=text name="nick" id="nick">
+</div>
+<button type=submit class="btn btn-light">进入房间</button>
 </form>
+</div>
