@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+
 <script language="javascript">
     var conn;
     var pendingVoiceCmd = "";
@@ -15,7 +17,7 @@
 
     function speak() {
     	textToSpeak = window.pendingVoiceCmd;
-    	speakIt("所有人请闭眼。3，2，1。" + window.pendingVoiceCmd)
+    	speakIt(window.pendingVoiceCmd);
 	    window.pendingVoiceCmd = ""
     }
 
@@ -35,32 +37,34 @@
 	}
 
 	var isHost=false;
+	var role="未知身份";
 	var delaySpeak = false;
     function connectToWebSocket() {
+
+    	alert("你的身份是：" + role);
+
     	if (!isHost) {
     		return;
     	}
-    	var url = "ws://localhost/ws"
+    	var url = "ws://" + window.location.hostname + "/ws"
         conn = new WebSocket(url);
         conn.onclose = function (evt) {
-            alert("connection closed " + evt);
+            console.log("connection closed " + evt);
         };
         conn.onmessage = function (evt) {
         	//TODO: play voice according to message
             console.log("received message: " + evt.data);
             window.pendingVoiceCmd = evt.data;
             console.log(window.pendingVoiceCmd);
-            if (!delaySpeak) {
-            	window.setTimeout(speak(), 2000);
-            }
+            speak()
         };
         conn.onopen = function (evt) {
-        	alert("connection open" +evt);
+        	console.log("成功建立与服务器的长连接。");
         	var id = document.getElementById("boardNumber").value;
         	conn.send(id)
         };
         conn.onerror = function (evt) {
-        	alert("connection error" +evt);
+        	alert("连接错误，请检查网络。" +evt);
         };
     }
 
@@ -72,15 +76,13 @@
 		       // Typical action to be performed when the document is ready:
 		       var res = xhr.responseText;
 		       if(res.startsWith("昨夜信息")) {
-		       		speakIt(res + "\n");
+		       		speakIt(res + "\n，请警长组织开始发言。");
+		       		alert(res);
 		       		return;
 		       }
 		       alert(res);
-		       speak();
-		       delaySpeak = false;
 		    }
 		};
-		delaySpeak = true;
 		xhr.open(oFormElement.method, "operate");
 		var data = new FormData(oFormElement);
 		xhr.send(data);
@@ -138,57 +140,30 @@
 		document.getElementById("g3").style.display = (mtx[2]==1)?"block":"none";
 		document.getElementById("g4").style.display = (mtx[3]==1)?"block":"none";
 		document.getElementById("g5").style.display = (mtx[4]==1)?"block":"none";
-	}
-	function sitDown(showRole) {
-		var num = document.getElementById("num").value;
-		var nickName = document.getElementById("nick").value;
-		var board = document.getElementById("board").value;
-		if (showRole) {
-			/*TODO: send ajax request to show popup role message, providing board, num, nick
-			The message consists of the following lines:
-			seat number
-			role name
-			total seats
-			taken seats
-			wsUrl
-			*/
 
+		var options = document.getElementById("操作").options;
+		for (i=0;i<options.length;i++) {
+			if (!options[i].value.startsWith(role) && ! (isHost && options[i].value.startsWith("房主"))) {
+				options[i].setAttribute('hidden', 'hidden');
+			}
 		}
-		//TODO: remove fake values after testing
-		var seat_number = num;
-		var role_name = "预言家";
-		var total_seats = 12;
-		var taken_seats = 5;
-		var wsUrl = "ws://localhost/ws";
-		document.getElementById("userInfo").inneqrHTML= "<h1>" + num + "号玩家 " + nickName + "</h1> 房间号：" + board;
-		document.getElementById("operation").style.display = "block";
-		document.getElementById("checkRole").style.display = "none";
-		document.getElementById("boardNumber").value = board;
-		document.getElementById("nickName").value = nickName;
-		document.getElementById("userNumber").value = num;
-		connectToWebSocket(wsUrl+"?id="+seat_number)
 	}
 </script>
-<body onload="connectToWebSocket();">
-<div id="checkRole" style="display:none">
-	<h2>请输入房间号，想要的座位号码和昵称后，点击"入座"</h2>
-	房间号：<input id="board" type=number value=1000001><br>
-	首选座号：<input id="num" type=number min=0 max=20 value=1><br>
-	昵称：<input id="nick" type=text size=20 value="玩家"><br>
-	<input type=button value="入座" onclick = "sitDown(true)">
-	<input type=button value="返回座位" onclick = "sitDown(false)">
-</div>
-<form id="operation" method="POST" action="#" onsubmit="return doAction();" style="display:block">
-	<p id = "userInfo">
 
-	</p>
-	<p>
-	<div>
-	<input type=text id="boardNumber" name="board" value="1000001">
-	<input type=text id="userNumber" value="991" name="number">
-	<input type=text id="nickName" value="vrcats" name="nick">	
-	<hr>	
-	<select name="action" id="操作" onchange="setGrps()">
+
+<body onload="connectToWebSocket(); setGrps();" style="font-size: 3.5vmax;">
+<form id="operation" method="POST" action="#" onsubmit="return doAction();">
+
+<div class="container-fluid bd-highlight rounded mx-auto card rounded p-3 m-5 bg-light border-secondary">
+	<div class="row"><label>房号：</label><input type=text id="boardNumber" name="board" value="1000001"></div>
+	<div class="row"><label>座号：</label><input type=text id="userNumber" value="991" name="number"></div>
+	<div class="row"><label>昵称：</label><input type=text id="nickName" value="vrcats" name="nick"></div>
+</div>
+
+<div class="container-fluid bd-highlight rounded mx-auto card rounded p-3 m-5 bg-light border-secondary">
+		<h2>操作</h2>
+	<div class="row">
+	<select class="text-dark" name="action" id="操作" onchange="setGrps()">
 	<option value="房主开局">房主开局</option>
 	<option value="房主查看昨夜结果">房主查看昨夜结果</option>
 	<option value="房主关闭">房主关闭</option>		
@@ -228,7 +203,8 @@
 	<option value="迷妹黑">迷妹黑</option>
 	<option value="恶魔验">恶魔验</option>
 	</select>
-	</div>
+	</span></div>
+	<div class="row">
 	<div id="g1" style="display:none">
 	<select name="num1" id="号码">
 	<option value="0">空号码</option>
@@ -252,7 +228,8 @@
 	<option value="18">18</option>
 	<option value="19">19</option>
 	<option value="20">20</option>
-	</select>号玩家</div>
+	</select>号玩家</div></div>
+	<div class="row">
 	<div id="g2" style="display:none">和
 	<select name="num2" id="和号码">
 	<option value="0">空号码</option>
@@ -276,7 +253,8 @@
 	<option value="18">18</option>
 	<option value="19">19</option>
 	<option value="20">20</option>
-	</select>号玩家</div>
+	</select>号玩家</div></div>
+	<div class="row">
 	<div id="g3" style="display:none">还有
 	<select name="num3" id="还有号码">
 	<option value="0">空号码</option>
@@ -300,14 +278,16 @@
 	<option value="18">18</option>
 	<option value="19">19</option>
 	<option value="20">20</option>
-	</select>号玩家</div>
+	</select>号玩家</div></div>
+	<div class="row">
 	<div id="g4" style="display:none">以下技能:
 	<select name="skill" id="技能">
 	<option value="">无技能</option>
 	<option value="镜子">镜子</option>
 	<option value="毒药">毒药</option>
 	<option value="猎枪">猎枪</option>
-	</select></div>
+	</select></div></div>
+	<div class="row">
 	<div id="g5" style="display:none">第几张牌：
 	<select name="card" id="牌">
 	<option value="0">不选</option>
@@ -316,8 +296,8 @@
 	<option value="3">3</option>
 	<option value="4">4</option>
 	</select>
-	</div>
-	</p>
+	</div></div>
+</div>
 <input type=button value="Go" onclick="doAction()">
 </form>
 </body>

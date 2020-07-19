@@ -39,6 +39,7 @@ func (b *Board) Player(n int) *Player {
 
 // Create a new board
 func (b *Board) New(id int, roles []string, meta map[string]string) Board {
+	log.Println(id, roles, meta)
 	b.Seats = make(map[int]*Player)
 	b.Id = id
 	b.State = "setup"
@@ -49,8 +50,8 @@ func (b *Board) New(id int, roles []string, meta map[string]string) Board {
 	fmt.Printf("New board created: %v\n", b)
 	b.AddRoles(roles)
 	b.SM = map[string][]string {
-		"setup": {"所有人", "生成房间并洗牌，如有盗贼生成盗贼选择，请大家入座查看身份", "allSeated","begin"},
-		"begin": {"所有人", "所有玩家已经入座完毕并查看了身份，请点击确认开始游戏", "done","10"},
+		"setup": {"房主", "生成房间并洗牌，如有盗贼生成盗贼选择，请大家入座查看身份", "allSeated","begin"},
+		"begin": {"房主", "所有玩家已经入座完毕并查看了身份，请点击确认开始游戏", "done","10"},
 		"10": {"混血儿", "混血儿请睁眼，选择一个号码作为爸爸","done","20"},
 		"20": {"野孩子", "野孩子请睁眼，请选择一个号码作为榜样，榜样死亡你将变成狼人", "done","22"},
 		"22": {"企鹅", "企鹅请睁眼，请选择一位玩家冷冻他的技能", "done","25"},
@@ -84,8 +85,8 @@ func (b *Board) New(id int, roles []string, meta map[string]string) Board {
 		"270": {"名媛", "名媛请睁眼，请选择要与哪位玩家共渡春宵。此玩家今晚中刀中毒不会死亡，但你若死亡他也将殉葬。若连睡两晚，对方将死亡。", "done","280"},
 		"280": {"迷妹", "迷妹请睁眼，是否要对你的偶像使用粉或黑的技能，粉可以减少一票，黑可以增加一票", "done","290"},
 		"290": {"潜行者", "潜行者请睁眼，请选择是否要暗杀你白天投票的玩家", "done","end"},
-		"end": {"所有人", "", "done", "EXIT"},
-		"EXIT": {"所有人", "请所有人整理表情，想竞选警长的玩家请举手。5，4，3，2，1，所有人睁眼。选举结束后请房主查看昨夜信息。", "done", ""},
+		"end": {"房主", "", "done", "EXIT"},
+		"EXIT": {"房主", "请所有人整理表情，想竞选警长的玩家请举手。5，4，3，2，1，所有人睁眼。选举结束后请房主查看昨夜信息。", "done", ""},
 	}
 	//开牌前洗牌
 	b.shuffle()
@@ -118,6 +119,9 @@ func (board* Board) TakeAction(seatNumber string, action string, n1 string, n2 s
 		return fmt.Sprintf("操作数错误%d ", n3)
 	}
 */
+	if action != "房主开局" && (board.State == "setup" || board.State == "begin") {
+		return "尚未开局，还不能进行操作。"
+	}
 	//检查是否有权限做这个事情，发起action的人身份必须与当前轮次操作人身份相符
 	if (!board.inOperatorGroup(seat)) {
 		operator := board.SM[board.State][0]
@@ -242,6 +246,7 @@ func (b *Board) TakeSeat(seatNumber int, nickName string) (int,int,int) {
 	if takenSeats == totalSeats {
 		return -1, totalSeats, takenSeats
 	}
+	takenSeats = takenSeats + 1
 	if !b.Seats[seatNumber].HasLabel("已入座") {
 		b.Seats[seatNumber].Label("已入座")
 		b.Seats[seatNumber].Seat = seatNumber
@@ -329,6 +334,7 @@ func (b *Board) ViewCard(prefferedSeat int, nickName string) string {
 	}
 	role := b.Seats[seat].Role
 	b.Log(fmt.Sprintf("玩家 %s 占据了%d号座位，他的身份是%s, %d个座位中已经有%d个座位有人。",nickName, seat, role, total_seats, taken_seats))
+	b.Println()
 	return fmt.Sprintf("%d\n%s\n%d\n%d", seat, role, total_seats, taken_seats)
 }
 func (b *Board) endGame() string {
@@ -362,10 +368,16 @@ func (b *Board) Println() {
 }
 
 func (b *Board) lastNightResult() string {
+	//防止重复计算
+	if b.State == "EXIT" {
+		return strings.Join(b.report, "\n")
+	}
+
 	log.Println("正在计算昨夜结果....")
 	//TODO: 计算昨夜死讯，需要考虑的情况非常多
 	//{"被刀","被毒","被救","被连","被守","被睡","被潜","情侣","被守毒","被感染"}
 	b.Println()
+
 
 	death := []*Player {}
 	for _, p := range b.Seats {

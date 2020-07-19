@@ -44,12 +44,13 @@ func checkIn(w http.ResponseWriter, req *http.Request) {
 	roles := config.Roles
 	meta := config.Meta
 	board.New(boardId, roles, meta)
+
 	sitDown := board.ViewCard(seatNumber, nickName)
+	board.Seats[seatNumber].Label("房主")
 	//Process sitDown, extract seat number and assign
 	responses := strings.Split(sitDown, "\n")
 	actualSeat := responses[0]
-
-	board.Println()
+	actualRole := responses[1]
 
 	content, err := ioutil.ReadFile("html/ops.html")
     if err != nil {
@@ -62,6 +63,8 @@ func checkIn(w http.ResponseWriter, req *http.Request) {
     message = strings.ReplaceAll(message, "1000001", strconv.Itoa(board.Id))
     message = strings.ReplaceAll(message, "991", actualSeat)
     message = strings.ReplaceAll(message, "isHost=false", "isHost=true")
+    message = strings.ReplaceAll(message, "未知身份", actualRole)
+
 
     w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
@@ -76,9 +79,12 @@ func sitDown(w http.ResponseWriter, req *http.Request) {
 	boardId, _ := strconv.Atoi(b)
 	board := boards[boardId]
 	s, _ := strconv.Atoi(n)
+	log.Println(s, k)
 	sitDown := board.ViewCard(s, k)
 	responses := strings.Split(sitDown, "\n")
+	log.Println(responses)
 	actualSeat := responses[0]
+	actualRole := responses[1]
 
 	content, err := ioutil.ReadFile("html/ops.html")
     if err != nil {
@@ -90,6 +96,13 @@ func sitDown(w http.ResponseWriter, req *http.Request) {
     message := string(content)
     message = strings.ReplaceAll(message, "1000001", b)
     message = strings.ReplaceAll(message, "991", actualSeat)
+    message = strings.ReplaceAll(message, "未知身份", actualRole)
+
+    if responses[3] == responses[2] {
+    	instruction := "房间已满，请房主开始游戏。"
+    	msg := &Message{BoardId: board.Id, Body: instruction}
+		hub.host <- msg
+    }
 
     w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
@@ -112,7 +125,7 @@ func operate(w http.ResponseWriter, req *http.Request) {
 		log.Println("State not changed, skipping host notification...")
 	} else {
 		log.Println("State changed, sending notification to hosts...")
-		instruction := board.SM[board.State][1]
+		instruction := "所有人请闭眼，3，2，1。" + board.SM[board.State][1]
 		msg := &Message{BoardId: board.Id, Body: instruction}
 		hub.host <- msg
 	}

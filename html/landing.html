@@ -32,12 +32,11 @@ function updateSummary() {
 
 		}
 	    if (inputs[i].type == 'number'){
-	    	if (inputs[i].id == "seat") {
-	    		continue;
-	    	}
-	    	for (j=0;j<inputs[i].value;j++) {
-	    		roles.push(inputs[i].id);
-	    	}
+	    	if (inputs[i].id != "seat") {
+		    	for (j=0;j<inputs[i].value;j++) {
+		    		roles.push(inputs[i].id);
+		    	}
+		    }
 	    }
 	}
 	var options = document.getElementsByTagName('select');
@@ -49,6 +48,7 @@ function updateSummary() {
 	var json = "{ \"roles\": " + JSON.stringify(roles) + ", \"meta\":" + JSON.stringify(meta) + "}";
 	document.getElementById("summary").textContent = json;
 	document.getElementById("roles").value = json;
+	return true;
 }
 </script>
 
@@ -185,12 +185,12 @@ function updateSummary() {
 <h4 id = "summary">
 
 </h4>
-<div class="container p-3 my-3 m-5 bg-info text-white align-items-center container-fluid  rounded">
-<form action="http://localhost/checkIn" method="POST">
+<div class="container-fluid bd-highlight rounded mx-auto card rounded p-3 m-5 bg-light border-secondary">
+<form action="checkIn" method="POST">
 <input class="text-dark" type=hidden value="" name="roles" id="roles">
 <div class="row"><span class="label label-info col m-3 text-left">房主首选座位：<input class="text-dark"  type=number value="1" min=1 max=20 name="seat" id="seat"></span></div>
 <div class="row"><span class="label label-info col m-3 text-left">房主昵称：<input class="text-dark"  type=text name="nick" id="nick"></span></div>
-<input class="text-dark btn-light" type=submit value="确认开局">
+<input class="text-dark btn-light" type=submit value="确认开局" onclick="updateSummary();">
 </form>
 </div>
 </div>
