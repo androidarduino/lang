@@ -57,15 +57,15 @@ func (b *Board) New(id int, roles []string, meta map[string]string) Board {
 		"22": {"企鹅", "企鹅请睁眼，请选择一位玩家冷冻他的技能", "done","25"},
 		"25": {"迷妹", "迷妹请睁眼，请选择你的偶像", "done","30"},
 		"30": {"盗贼", "盗贼请睁眼查看状态，从两张牌中选择一张作为自己的身份，如果有狼牌必须选择狼牌", "done","40"},
-		"40": {"丘比特", "丘比特请睁眼，请选择两位玩家成为情侣。如果这两位玩家一好人一狼，你们三个会成为第三方", "done","43"},
-		"43": {"所有人", "所有人请睁眼，并点击查看结果，确认你有没有被连为情侣", "allViewed","45"},
+		"40": {"丘比特", "丘比特请睁眼，请选择两位玩家成为情侣。如果这两位玩家一好人一狼，你们三个会成为第三方，生理条件是杀光所有其他人。", "done","43"},
+		"43": {"丘比特", "所有人请睁眼，并点击查看结果，确认你有没有被连为情侣", "allViewed","45"},
 		"45": {"情侣", "情侣请睁眼互认，但不要交流身份。如果你们一好人一狼，你们三个会成为第三方", "done","50"},
 		"50": {"机械狼", "机械狼请睁眼，本轮是否要选择一位玩家学习他的技能，学习后你的身份将与他一样", "done","55"},
 		"55": {"魔术师", "魔术师请睁眼，请选择是否要交换场上两位玩家今晚的身份", "done","60"},
 		"60": {"两姐妹", "两姐妹请睁眼互认。你们投票时必须投同一位玩家，请相互确认后点击确认", "done","70"},
 		"70": {"三兄弟", "三兄弟请睁眼互认。你们投票时必须投统一为玩家，请相互确认后点击确认", "done","90"},
 		"90": {"黑商", "黑商请睁眼，选择一位玩家并赋予他一项神技，若选中狼人，则他不会得到技能而你会被反噬而死", "done","100"},
-		"100": {"所有人", "所有人请睁眼病点击查看结果，确认你有没有被黑商赋予技能", "allViewed","110"},
+		"100": {"黑商", "所有人请睁眼病点击查看结果，确认你有没有被黑商赋予技能", "allViewed","110"},
 		"110": {"幸运儿", "幸运儿请睁眼，今天你是否要使用你得到的技能，如果使用请选择技能和目标", "done","120"},
 		"120": {"狼人", "所有狼人和小女孩请睁眼，请用手语商量战术，并选择一个目标进行狙杀", "done","130"},
 		"130": {"狼兄", "狼兄狼弟请睁眼，互认身份之后请狼兄点击确认继续", "done","140"},
@@ -125,8 +125,8 @@ func (board* Board) TakeAction(seatNumber string, action string, n1 string, n2 s
 	if action != "房主开局" && (board.State == "setup" || board.State == "begin") {
 		return "尚未开局，还不能进行操作。"
 	}
-	//检查是否有权限做这个事情，发起action的人身份必须与当前轮次操作人身份相符
-	if (!board.inOperatorGroup(seat)) {
+	//检查是否有权限做这个事情，发起action的人身份必须与当前轮次操作人身份相符，除了全体查看情侣和幸运儿的步骤之外
+	if (!board.inOperatorGroup(seat) && board.State!="43" && board.State != "100") {
 		operator := board.SM[board.State][0]
 		return fmt.Sprintf("当前是 %s 操作的轮次，您没有操作权限。", operator)
 	}
@@ -266,6 +266,9 @@ func (b *Board) TakeSeat(seatNumber int, nickName string) (int,int,int) {
 }
 
 func (b *Board) hasRole(role string) bool {
+	if role == "幸运儿" {
+		role = "黑商"
+	}
 	for _, player := range b.Seats {
 		if player.Role == role {
 			return true
@@ -430,7 +433,7 @@ func (b *Board) lastNightResult() string {
 			}
 			if p.HasLabel("情侣") {
 				for _, k := range b.Seats {
-					if k.HasLabel("被睡") {
+					if k.HasLabel("情侣") {
 						death = append(death, k)
 					}
 				}	
@@ -684,6 +687,9 @@ func (b *Board) endow(num1 int, skill string) string {
 		if target.IsGood() {
 			target.Label("幸运儿")
 			target.Skills[skill] = 1
+			if skill == "查看状态" {
+				target.Skills[skill] = 99
+			}
 			b.Log(fmt.Sprintf("%d号黑商给了%d号玩家‘%s’技能", player.Seat, num1, skill))
 		} else {
 			b.Log(fmt.Sprintf("%d号黑商给了%d号狼人‘%s’技能， 被反噬而死", player.Seat, num1, skill))

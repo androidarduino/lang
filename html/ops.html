@@ -96,7 +96,8 @@
 		"房主查看昨夜结果": [0,0,0,0,0],
 		"房主关闭": [0,0,0,0,0],
 		"房主重新发牌": [0,0,0,0,0],
-		"全体查看结果": [0,0,0,0,0],
+		"全体查看情侣": [0,0,0,0,0],
+		"全体查看幸运儿": [0,0,0,0,0],
 		"不操作": [0,0,0,0,0],
 		"确认": [0,0,0,0,0],
 		"讨论完毕": [0,0,0,0,0],
@@ -154,7 +155,7 @@
 	function speechOrder() {
 		var seat = Math.floor(Math.random() * boardSize) + 1;
 		var lr = (Math.random() > 0.5) ? "小" : "大"
-		speakIt("请各位从" + seat.toString() + "号玩家开始向" + lr + "号码发言。")
+		speakIt("" + seat.toString() + "号向" + lr + "发言。")
 	}
 </script>
 
@@ -176,7 +177,8 @@
 	<option value="房主查看昨夜结果">房主查看昨夜结果</option>
 	<option value="房主关闭">房主关闭</option>		
 	<option value="房主重新发牌">房主重新发牌</option>
-	<option value="全体查看结果">全体查看结果</option>
+	<option value="全体查看情侣">全体查看情侣</option>
+	<option value="全体查看幸运儿">全体查看幸运儿</option>
 	<option value="猎人状态">猎人状态</option>
 	<option value="讨论完毕">不操作</option>
 	<option value="狼人杀">狼人杀</option>
@@ -291,9 +293,9 @@
 	<div id="g4" style="display:none">以下技能:
 	<select name="skill" id="技能">
 	<option value="">无技能</option>
-	<option value="镜子">镜子</option>
-	<option value="毒药">毒药</option>
-	<option value="猎枪">猎枪</option>
+	<option value="预言家验">镜子</option>
+	<option value="女巫毒">毒药</option>
+	<option value="查看状态">猎枪</option>
 	</select></div></div>
 	<div class="row">
 	<div id="g5" style="display:none">第几张牌：
@@ -308,10 +310,10 @@
 </div>
 <input type=button value="Go" onclick="doAction()">
 </form>
-<button id="随即发言" style="display:none" onclick = "speechOrder()"> 发言顺序 </button>
+<button id="随机发言" style="display:none" onclick = "speechOrder()"> 发言顺序 </button>
 <script language="javascript">
 	if (isHost) {
-		document.getElementById("随即发言").style.display = "block";
+		document.getElementById("随机发言").style.display = "block";
 	}
 </script>
 </body>
