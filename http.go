@@ -79,7 +79,12 @@ func checkIn(w http.ResponseWriter, req *http.Request) {
 func sitDown(w http.ResponseWriter, req *http.Request) {
 	b, n, k := req.FormValue("board"), req.FormValue("number"), req.FormValue("nick")
 	boardId, _ := strconv.Atoi(b)
-	board := boards[boardId]
+	board, ok := boards[boardId]
+	if !ok {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprintf(w, "<h2>404: 房间号没找到，请确认房间号后重试。</h2>")
+		return
+	}
 	s, _ := strconv.Atoi(n)
 	log.Println(s, k)
 	sitDown := board.ViewCard(s, k)
@@ -120,7 +125,11 @@ func operate(w http.ResponseWriter, req *http.Request) {
 	log.Println(fmt.Sprintf("request form values: %v", req.Form))
 
 	boardId, _ = strconv.Atoi(n)
-	board := boards[boardId]
+	board, ok := boards[boardId]
+	if !ok {
+		fmt.Fprintf(w, "房间号没找到，请确认房间号后重试。")
+		return
+	}
 	oldState := board.State
 	log.Println(fmt.Sprintf("Calling TakeAction with parameters board: %s seat number %s action %s num1 %s num2 %s num3 %s skill %s card %s", n, number, action, num1, num2, num3, skill, card))
 	fmt.Fprintf(w, board.TakeAction(number, action, num1, num2, num3, skill, card))
