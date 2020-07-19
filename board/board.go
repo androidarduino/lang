@@ -368,9 +368,9 @@ func (b *Board) Println() {
 }
 
 func (b *Board) lastNightResult() string {
-	//防止重复计算
+	//TODO: 防止重复计算, set a flag when it is already checked
 	if b.State == "EXIT" {
-		return strings.Join(b.report, "\n")
+		//return strings.Join(b.report, "\n")
 	}
 
 	log.Println("正在计算昨夜结果....")

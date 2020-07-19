@@ -144,7 +144,8 @@
 		var options = document.getElementById("操作").options;
 		for (i=0;i<options.length;i++) {
 			if (!options[i].value.startsWith(role) && ! (isHost && options[i].value.startsWith("房主"))) {
-				options[i].setAttribute('hidden', 'hidden');
+				//TODO: temporarily disabled for debugging
+				//options[i].setAttribute('hidden', 'hidden');
 			}
 		}
 	}
