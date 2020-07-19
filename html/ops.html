@@ -3,6 +3,7 @@
 <script language="javascript">
     var conn;
     var pendingVoiceCmd = "";
+    var boardSize = 1234;
 
 	function send(msg) {
         if (!conn) {
@@ -149,6 +150,12 @@
 			}
 		}
 	}
+
+	function speechOrder() {
+		var seat = Math.floor(Math.random() * boardSize) + 1;
+		var lr = (Math.random() > 0.5) ? "小" : "大"
+		speakIt("请各位从" + seat.toString() + "号玩家开始向" + lr + "号码发言。")
+	}
 </script>
 
 
@@ -171,7 +178,7 @@
 	<option value="房主重新发牌">房主重新发牌</option>
 	<option value="全体查看结果">全体查看结果</option>
 	<option value="猎人状态">猎人状态</option>
-	<option value="讨论完毕">讨论完毕</option>
+	<option value="讨论完毕">不操作</option>
 	<option value="狼人杀">狼人杀</option>
 	<option value="女巫查看">女巫查看</option>
 	<option value="女巫毒">女巫毒</option>
@@ -301,4 +308,10 @@
 </div>
 <input type=button value="Go" onclick="doAction()">
 </form>
+<button id="随即发言" style="display:none" onclick = "speechOrder()"> 发言顺序 </button>
+<script language="javascript">
+	if (isHost) {
+		document.getElementById("随即发言").style.display = "block";
+	}
+</script>
 </body>

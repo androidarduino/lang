@@ -114,11 +114,14 @@ func (board* Board) TakeAction(seatNumber string, action string, n1 string, n2 s
 	if (err != nil) {
 		return fmt.Sprintf("操作数错误%s ", n2)
 	}
-/*	num3, err := strconv.Atoi(n3)
+	num3, err := strconv.Atoi(n3)
 	if (err != nil) {
 		return fmt.Sprintf("操作数错误%d ", n3)
 	}
-*/
+
+	if num1 > board.SeatsCount || num2 > board.SeatsCount || num3 > board.SeatsCount || seat > board.SeatsCount {
+		return "参数错误。"
+	}
 	if action != "房主开局" && (board.State == "setup" || board.State == "begin") {
 		return "尚未开局，还不能进行操作。"
 	}
@@ -160,7 +163,7 @@ func (board* Board) TakeAction(seatNumber string, action string, n1 string, n2 s
 		case "女巫毒":
 			message = board.poison(num1)
 		case "女巫救":
-			message = board.heal()
+			message = board.heal(num1)
 		case "预言家验":
 			message = board.examine(num1)
 		case "狼美人连":
@@ -454,6 +457,11 @@ func (b *Board) lastNightResult() string {
 }
 //用作猎人，狼枪进行确认开枪状态
 func (b *Board) confirm() string {
+	seat := b.ActivePlayer.Seat
+	if (!b.inOperatorGroup(seat)) {
+		operator := b.SM[b.State][0]
+		return fmt.Sprintf("当前是 %s 操作的轮次，您没有操作权限。", operator)
+	}
 	b.nextStep()
 	if (b.ActivePlayer.HasLabel("被毒")||b.ActivePlayer.HasLabel("被冻")) {
 		return "你昨晚被毒或被冻了，明天无法开枪。"
@@ -508,6 +516,7 @@ func (b *Board) witchResult() string {
 }
 func (b *Board) slaughter(num1 int) string {
 	if num1 == 0 {
+		b.nextStep()
 		return "狼人空刀成功。"
 	}
 	player := b.ActivePlayer
@@ -528,6 +537,10 @@ func (b *Board) slaughter(num1 int) string {
 }
 func (b *Board) poison(num1 int) string {
 	player := b.ActivePlayer
+	if num1 == 0 {
+		b.nextStep()
+		return "操作成功，没有使用毒药。"
+	}
 	target := b.Seats[num1]
 	if (target.HasLabel("恶魔")) {
 		return "操作成功。"
@@ -541,13 +554,13 @@ func (b *Board) poison(num1 int) string {
 		b.Log(fmt.Sprintf("%d号女巫毒了%d号玩家", player.Seat, target.Seat))
 		b.nextStep()
 	}
-	return "操作成功。"
+	return "操作成功，使用了一瓶毒药。"
 }
-func (b *Board) heal() string {
+func (b *Board) heal(num1 int) string {
 	player := b.ActivePlayer
 	nu, ok := b.meta["昨晚中刀"]
 	if (!ok) {
-		return "操作错误，昨晚没有玩家没有死亡。"
+		return "操作成功。没有使用解药。"
 	}
 	ns, _ := strconv.Atoi(nu)
 	target := b.Seats[ns]
@@ -563,10 +576,13 @@ func (b *Board) heal() string {
 		b.Log(fmt.Sprintf("%d号女巫救了%d号玩家", player.Seat, target.Seat))
 		b.nextStep()
 	}
-	return "操作成功。"
+	return "操作成功，使用了一瓶解药。"
 }
 func (b *Board) examine(num1 int) string {
 	player := b.ActivePlayer
+	if num1 == 0 || player.Seat == num1 {
+		return "操作错误，不能验空号码或验自己。"
+	}
 	target := b.Seats[num1]
 	b.meta["昨晚被验"] = strconv.Itoa(num1)
 	_, ok := player.Skills["预言家验"]
@@ -636,10 +652,14 @@ func (b *Board) guard(num1 int) string {
 	if !ok {
 		l = "-1"
 	}
-	if (strconv.Itoa(num1) == l) {
+	if (strconv.Itoa(num1) == l && l != "0") {
 		return "操作失败，不可以连续两晚守同一个人"
 	}
 	b.meta["昨晚被守"] = strconv.Itoa(num1)
+	if num1 == 0 {
+		b.nextStep()
+		return "操作成功。"
+	}
 	n, ok := player.Skills["守卫守"]
 	if (!ok || n<1) {
 		return "操作失败，您没有守人的能力。"
@@ -924,6 +944,9 @@ func (b *Board) infect() string {
 func (b *Board) mix(num1 int) string {
 	player := b.ActivePlayer
 	target := b.Seats[num1]
+	if player.Seat == num1 || num1 == 0 {
+		return "操作失败，不能混自己或混空号。"
+	}
 	n, ok := player.Skills["混血儿混"]
 	if (!ok || n<1) {
 		return "操作失败，您没有混血儿混人的能力。"

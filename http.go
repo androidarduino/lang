@@ -64,6 +64,8 @@ func checkIn(w http.ResponseWriter, req *http.Request) {
     message = strings.ReplaceAll(message, "991", actualSeat)
     message = strings.ReplaceAll(message, "isHost=false", "isHost=true")
     message = strings.ReplaceAll(message, "未知身份", actualRole)
+    message = strings.ReplaceAll(message, "vrcats", nickName)
+    message = strings.ReplaceAll(message, "1234", strconv.Itoa(board.SeatsCount))
 
 
     w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -97,6 +99,9 @@ func sitDown(w http.ResponseWriter, req *http.Request) {
     message = strings.ReplaceAll(message, "1000001", b)
     message = strings.ReplaceAll(message, "991", actualSeat)
     message = strings.ReplaceAll(message, "未知身份", actualRole)
+    message = strings.ReplaceAll(message, "vrcats", k)
+    message = strings.ReplaceAll(message, "1234", strconv.Itoa(board.SeatsCount))
+
 
     if responses[3] == responses[2] {
     	instruction := "房间已满，请房主开始游戏。"
@@ -125,7 +130,7 @@ func operate(w http.ResponseWriter, req *http.Request) {
 		log.Println("State not changed, skipping host notification...")
 	} else {
 		log.Println("State changed, sending notification to hosts...")
-		instruction := "所有人请闭眼，3，2，1。" + board.SM[board.State][1]
+		instruction := "所有人请闭眼，5，4，3，2，1。" + board.SM[board.State][1]
 		msg := &Message{BoardId: board.Id, Body: instruction}
 		hub.host <- msg
 	}

@@ -142,7 +142,7 @@ func (p *Player) New(playerType string) Player {
 		p.Create([]string{"白狼王","狼人"},map[string]int {})
 	}
 	if (playerType == "狼美人") {
-		p.Create([]string{"狼美人","狼人"},map[string]int {"狼美人连":1})
+		p.Create([]string{"狼美人","狼人"},map[string]int {"狼美人连":99, "狼人刀":99})
 	}
 	if (playerType == "狼枪") {
 		p.Create([]string{"狼枪","狼人"},map[string]int {"查看状态":99})
@@ -163,7 +163,7 @@ func (p *Player) New(playerType string) Player {
 		p.Create([]string{"狼人"},map[string]int {"狼人刀":99})
 	}
 	if (playerType == "狼兄") {
-		p.Create([]string{"狼兄","狼人"},map[string]int {"狼人刀":1})
+		p.Create([]string{"狼兄","狼人"},map[string]int {"狼人刀":99})
 	}
 	if (playerType == "狼弟") {
 		p.Create([]string{"狼弟","狼人","狼队不睁眼"},map[string]int {})
