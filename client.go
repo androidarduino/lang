@@ -109,7 +109,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("boardId")
 	fmt.Println(fmt.Sprintf("board id: %s", id))
 
-	boardId, _ = strconv.Atoi(id)
+	boardId, _ := strconv.Atoi(id)
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)

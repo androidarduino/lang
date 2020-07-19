@@ -33,9 +33,9 @@ func checkIn(w http.ResponseWriter, req *http.Request) {
 
 	//把输入值变成数组，创建一个局，把每一个元素加入其中
 	board := new(board.Board)
-	boardId = boardId + 1
-	board.Id = boardId
-	boards[boardId] = board
+	globalBoardId = globalBoardId + 1
+	board.Id = globalBoardId
+	boards[board.Id] = board
 	//TODO：转换输入数据为json对象，从中取出roles数组
 	//roles := parseRoles(roleJson)
 	//TODO: 从输入里获取本局配置
@@ -43,7 +43,7 @@ func checkIn(w http.ResponseWriter, req *http.Request) {
 	//roles := []string {"预言家","女巫","猎人","白痴","村民","村民","村民","村民","狼人","狼人","狼人","狼人",}
 	roles := config.Roles
 	meta := config.Meta
-	board.New(boardId, roles, meta)
+	board.New(board.Id, roles, meta)
 
 	sitDown := board.ViewCard(seatNumber, nickName)
 	board.Seats[seatNumber].Label("房主")
@@ -124,7 +124,7 @@ func operate(w http.ResponseWriter, req *http.Request) {
 	num1, num2, num3, skill, card := req.FormValue("num1"), req.FormValue("num2"), req.FormValue("num3"), req.FormValue("skill"), req.FormValue("card")
 	log.Println(fmt.Sprintf("request form values: %v", req.Form))
 
-	boardId, _ = strconv.Atoi(n)
+	boardId, _ := strconv.Atoi(n)
 	board, ok := boards[boardId]
 	if !ok {
 		fmt.Fprintf(w, "房间号没找到，请确认房间号后重试。")
@@ -146,13 +146,13 @@ func operate(w http.ResponseWriter, req *http.Request) {
 }
 
 var boards map[int]*board.Board
-var boardId int
 var hub *Hub
+var globalBoardId int
 
 func main() {
 	fmt.Println("Creating board pool...")
 	boards = map[int]*board.Board {}
-	boardId = 1000000
+	globalBoardId = 1000000
 	hub = newHub()
 	go hub.run()
 	log.Println("Websocket hub started...")
