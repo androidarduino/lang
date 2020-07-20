@@ -249,7 +249,6 @@ func (b *Board) TakeSeat(seatNumber int, nickName string) (int,int,int) {
 	if takenSeats == totalSeats {
 		return -1, totalSeats, takenSeats
 	}
-	takenSeats = takenSeats + 1
 	if !b.Seats[seatNumber].HasLabel("已入座") {
 		b.Seats[seatNumber].Label("已入座")
 		b.Seats[seatNumber].Seat = seatNumber
@@ -335,7 +334,7 @@ func (b *Board) ViewCard(prefferedSeat int, nickName string) string {
 		prefferedSeat = 1
 	}
 	seat, total_seats, taken_seats := b.TakeSeat(prefferedSeat, nickName)
-	if (total_seats == taken_seats) {
+	if (seat == -1) {
 		return fmt.Sprintf("%d\n%s\n%d\n%d", 0, "房间已满", total_seats, taken_seats)
 	}
 	role := b.Seats[seat].Role

@@ -157,6 +157,9 @@
 		var lr = (Math.random() > 0.5) ? "小" : "大"
 		speakIt("" + seat.toString() + "号向" + lr + "发言。")
 	}
+    window.onbeforeunload = function() {
+        return "请不要刷新或者回退页面，否则有可能影响到游戏的进程。";
+    }
 </script>
 
 
