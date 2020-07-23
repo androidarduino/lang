@@ -1,12 +1,13 @@
 package main
+
 import (
 	"bytes"
+	"fmt"
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"time"
 	"strconv"
-	"github.com/gorilla/websocket"
-	"fmt"
+	"time"
 )
 
 const (
@@ -32,9 +33,9 @@ var upgrader = websocket.Upgrader{
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
-	hub *Hub
-	conn *websocket.Conn
-	send chan []byte
+	hub     *Hub
+	conn    *websocket.Conn
+	send    chan []byte
 	BoardId int
 }
 

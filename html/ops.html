@@ -54,10 +54,18 @@
         };
         conn.onmessage = function (evt) {
         	//TODO: play voice according to message
-            console.log("received message: " + evt.data);
+            console.log("received message: $" + evt.data + "$");
+            if (evt.data.startsWith("<table")) {
+            	document.getElementById("seat_table").innerHTML = evt.data;
+            	return;
+            }
+            if (evt.data.startsWith("fakeOps")) {
+            	eval(evt.data);
+            	return;
+            }
             window.pendingVoiceCmd = evt.data;
             console.log(window.pendingVoiceCmd);
-            speak()
+            setTimeout(function(){speak();}, 2000)
         };
         conn.onopen = function (evt) {
         	console.log("成功建立与服务器的长连接。");
@@ -67,6 +75,14 @@
         conn.onerror = function (evt) {
         	alert("连接错误，请检查网络。" +evt);
         };
+    }
+
+    function fakeOps(url) {
+    	var xhr = new XMLHttpRequest();
+    	xhr.open("GET", url);
+    	delay = Math.random()*15000;
+    	console.log("delaying for milliseconds: " + delay)
+    	window.setTimeout(function(){xhr.send(null)}, delay);
     }
 
 	function doAction() {
@@ -100,7 +116,6 @@
 		"全体查看幸运儿": [0,0,0,0,0],
 		"不操作": [0,0,0,0,0],
 		"确认": [0,0,0,0,0],
-		"讨论完毕": [0,0,0,0,0],
 		"狼人杀": [1,0,0,0,0],
 		"猎人状态": [0,0,0,0,0],
 		"女巫查看": [0,0,0,0,0],
@@ -172,6 +187,10 @@
 	<div class="row"><label>昵称：</label><input type=text id="nickName" value="vrcats" name="nick"></div>
 </div>
 
+<div id="seat_table" class="container-fluid bd-highlight rounded mx-auto card rounded p-3 m-5 bg-light border-secondary">
+
+</div>
+
 <div class="container-fluid bd-highlight rounded mx-auto card rounded p-3 m-5 bg-light border-secondary">
 		<h2>操作</h2>
 	<div class="row">
@@ -183,7 +202,7 @@
 	<option value="全体查看情侣">全体查看情侣</option>
 	<option value="全体查看幸运儿">全体查看幸运儿</option>
 	<option value="猎人状态">猎人状态</option>
-	<option value="讨论完毕">不操作</option>
+	<option value="不操作">不操作</option>
 	<option value="狼人杀">狼人杀</option>
 	<option value="女巫查看">女巫查看</option>
 	<option value="女巫毒">女巫毒</option>

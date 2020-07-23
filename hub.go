@@ -1,9 +1,10 @@
 package main
 
 import (
-	"log"
 	"fmt"
+	"log"
 )
+
 type Hub struct {
 	clients    map[*Client]bool
 	broadcast  chan []byte
@@ -14,13 +15,13 @@ type Hub struct {
 
 type Message struct {
 	BoardId int
-	Body string
+	Body    string
 }
 
 func newMessage(id int, body string) *Message {
 	return &Message{
 		BoardId: id,
-		Body: body,
+		Body:    body,
 	}
 }
 
